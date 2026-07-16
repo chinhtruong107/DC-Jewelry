@@ -1,0 +1,5 @@
+[00:00:03.662] Server  LOG      ✓ Ready in 2.7s
+[00:00:09.378] Server  LOG      ○ Compiling / ...
+[00:00:25.967] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:00:31.250] Server  ERROR   Products proxy error: TypeError: fetch failed
+[00:00:31.834] Server  ERROR   Products proxy error: TypeError: fetch failed

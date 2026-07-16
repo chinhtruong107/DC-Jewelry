@@ -1,0 +1,3 @@
+{
+  "/api/locations/provinces/[provinceCode]/wards/route": "app/api/locations/provinces/[provinceCode]/wards/route.js"
+}

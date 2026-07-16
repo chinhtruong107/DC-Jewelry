@@ -1,0 +1,16 @@
+{
+  "headers": {
+    "x-nextjs-stale-time": "300",
+    "x-nextjs-prerender": "1",
+    "x-next-cache-tags": "_N_T_/layout,_N_T_/payment/layout,_N_T_/payment/vnpay-result/layout,_N_T_/payment/vnpay-result/page,_N_T_/payment/vnpay-result"
+  },
+  "segmentPaths": [
+    "/_tree",
+    "/_full",
+    "/payment/vnpay-result/__PAGE__",
+    "/payment/vnpay-result",
+    "/payment",
+    "/_index",
+    "/_head"
+  ]
+}

@@ -26,22 +26,20 @@ services:
       - backend_vendor:/var/www/html/vendor
 
   frontend:
-  build:
-    context: ./frontend
-  container_name: trangsuc-frontend
-  restart: unless-stopped
-  depends_on:
-    - backend
-  environment:
-    NODE_ENV: production
-    PORT: 3002
-    HOSTNAME: 0.0.0.0
-    LARAVEL_API_URL: http://backend:8002/api
-    NEXT_PUBLIC_API_URL: /api
-  ports:
-    - "3002:3002"
+    build:
+      context: ./frontend
+    container_name: trangsuc-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    environment:
+      NODE_ENV: production
+      PORT: "3002"
+      HOSTNAME: 0.0.0.0
+      LARAVEL_API_URL: http://backend:8002/api
+      NEXT_PUBLIC_API_URL: /api
+    ports:
+      - "3002:3002"
 
 volumes:
   backend_vendor:
-  frontend_node_modules:
-  frontend_next:

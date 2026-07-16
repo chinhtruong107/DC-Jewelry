@@ -67,7 +67,7 @@ export default function Header() {
   return (
     <header className={`sticky top-0 z-50 border-b border-[#2b171a]/10 bg-[#f8f4ed]/95 text-[#28171a] transition-shadow duration-300 backdrop-blur-xl ${isScrolled ? "shadow-[0_12px_35px_rgba(48,25,28,0.08)]" : ""}`}>
       <div className="border-b border-[#2b171a]/10 bg-[#7a2130] px-4 py-2 text-center text-[9px] font-semibold uppercase tracking-[0.26em] text-[#fff9ef]">
-        Complimentary consultation · Hotline 083 865 2005
+        Complimentary consultation · Hotline 0389794445
       </div>
       <div className="mx-auto max-w-[1600px] px-4 sm:px-7 lg:px-10">
         <div className="grid min-h-[76px] grid-cols-[1fr_auto] items-center gap-4 lg:grid-cols-[1fr_auto_1fr]">

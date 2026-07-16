@@ -59,13 +59,13 @@ export default function Contact() {
     {
       icon: Phone,
       title: "Hotline",
-      details: ["038 979 4445"],
+      details: ["0389794445"],
       description: "Thứ Hai - Thứ Bảy, từ 9:00 đến 20:00.",
     },
     {
       icon: MapPin,
       title: "Boutique",
-      details: ["Thành phố Hồ Chí Minh"],
+      details: ["Hà Nội"],
       description: "Hẹn lịch trước để được tư vấn và trải nghiệm trang sức riêng tư.",
     },
     {
@@ -296,7 +296,7 @@ export default function Contact() {
             Gọi trực tiếp hoặc gửi tin nhắn, chúng tôi sẽ hỗ trợ bạn chọn thiết kế và xử lý thông tin đơn hàng nhanh nhất có thể.
           </p>
           <div className="mt-8 flex flex-col justify-center gap-4 sm:flex-row">
-            <a href="tel:0838652005" className="luxury-button inline-flex items-center justify-center gap-2 px-6 py-3">
+            <a href="tel:0389794445" className="luxury-button inline-flex items-center justify-center gap-2 px-6 py-3">
               <Phone className="h-4 w-4" />
               Gọi ngay
             </a>

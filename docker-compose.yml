@@ -34,7 +34,7 @@ services:
       - backend
     environment:
       LARAVEL_API_URL: http://backend:8002/api
-      NEXT_PUBLIC_API_URL: http://localhost:8002/api
+      NEXT_PUBLIC_API_URL: /api
       CHOKIDAR_USEPOLLING: "true"
       WATCHPACK_POLLING: "true"
     ports:

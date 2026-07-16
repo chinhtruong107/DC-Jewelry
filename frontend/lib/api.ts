@@ -3,7 +3,7 @@ import axios from 'axios';
 // Khởi tạo một Axios instance với cấu hình mặc định
 const api = axios.create({
   // Sử dụng biến môi trường hoặc mặc định là URL của Laravel (thường là port 8000)
-  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8002/api',
+  baseURL: process.env.NEXT_PUBLIC_API_URL || '/api',
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json',

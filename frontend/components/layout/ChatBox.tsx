@@ -25,6 +25,14 @@ interface ChatMessage {
   suggestions?: string[];
 }
 
+function createMessageId() {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return crypto.randomUUID();
+  }
+
+  return `msg-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
 const quickPrompts = [
   "Tư vấn chọn dây chuyền",
   "Gợi ý bông tai thanh lịch",
@@ -142,7 +150,7 @@ function buildBotResponse(question: string, products: Product[]): ChatMessage {
 
   if (/(^|\s)(xin chao|chao|hello|hi|alo|hey)(\s|$)/.test(normalizedQuestion)) {
     return {
-      id: crypto.randomUUID(),
+      id: createMessageId(),
       role: "bot",
       text:
         "Chào bạn, Đức Chính Jewelry có thể tư vấn theo phong cách, dịp sử dụng và ngân sách. Bạn đang tìm dây chuyền, bông tai, vòng tay hay một món quà đặc biệt?",
@@ -153,7 +161,7 @@ function buildBotResponse(question: string, products: Product[]): ChatMessage {
 
   if (/(bao hanh|doi tra|van chuyen|ship|giao hang)/.test(normalizedQuestion)) {
     return {
-      id: crypto.randomUUID(),
+      id: createMessageId(),
       role: "bot",
       text:
         "Đức Chính Jewelry hỗ trợ kiểm tra sản phẩm, xử lý đổi trả theo tình trạng thực tế và giao hàng toàn quốc. Nhân viên sẽ xác nhận thông tin đơn trước khi gửi.",
@@ -163,7 +171,7 @@ function buildBotResponse(question: string, products: Product[]): ChatMessage {
 
   if (/(mat tron|mat vuong|mat dai|trai xoan|dang mat|khuon mat|hop mat)/.test(normalizedQuestion)) {
     return {
-      id: crypto.randomUUID(),
+      id: createMessageId(),
       role: "bot",
       text:
         "Mình sẽ dựa trên phong cách và dịp sử dụng để gợi ý thiết kế hài hòa nhất. Nếu bạn chia sẻ thêm chất liệu yêu thích và ngân sách, lựa chọn sẽ chính xác hơn.",
@@ -174,7 +182,7 @@ function buildBotResponse(question: string, products: Product[]): ChatMessage {
 
   if (/(du tiec|hang ngay|di lam|di choi|ky niem|sinh nhat)/.test(normalizedQuestion)) {
     return {
-      id: crypto.randomUUID(),
+      id: createMessageId(),
       role: "bot",
       text:
         "Với nhu cầu sử dụng thường xuyên, bạn nên ưu tiên thiết kế tinh giản, dễ phối và thoải mái. Nếu dành cho một dịp đặc biệt, mình có thể gợi ý mẫu nổi bật hơn.",
@@ -185,7 +193,7 @@ function buildBotResponse(question: string, products: Product[]): ChatMessage {
 
   if (/(van phong|cong so|toi gian|thanh lich|nhe nhang|de deo)/.test(normalizedQuestion)) {
     return {
-      id: crypto.randomUUID(),
+      id: createMessageId(),
       role: "bot",
       text:
         "Trang sức dùng hằng ngày nên có đường nét gọn, dễ phối và phù hợp nhịp sống của bạn. Hãy cho mình biết thêm chất liệu hoặc kiểu dáng bạn yêu thích.",
@@ -196,7 +204,7 @@ function buildBotResponse(question: string, products: Product[]): ChatMessage {
 
   if (budget) {
     return {
-      id: crypto.randomUUID(),
+      id: createMessageId(),
       role: "bot",
       text: `Với ngân sách khoảng ${formatVND(budget)}, mình sẽ ưu tiên những thiết kế hài hòa về chất liệu, kiểu dáng và giá trị sử dụng. Đây là các lựa chọn phù hợp nhất trong tầm giá này.`,
       products: matchedProducts,
@@ -206,7 +214,7 @@ function buildBotResponse(question: string, products: Product[]): ChatMessage {
 
   if (/(gia|re|khuyen mai|ban chay|san pham|mua|tu van|chon|day chuyen|bong tai|vong tay|lac tay)/.test(normalizedQuestion)) {
     return {
-      id: crypto.randomUUID(),
+      id: createMessageId(),
       role: "bot",
       text:
         "Để chọn nhanh, bạn hãy chia sẻ 3 điều: dịp sử dụng, phong cách mong muốn và ngân sách. Mình có thể gợi ý sản phẩm theo từng tiêu chí đó.",
@@ -216,7 +224,7 @@ function buildBotResponse(question: string, products: Product[]): ChatMessage {
   }
 
   return {
-    id: crypto.randomUUID(),
+    id: createMessageId(),
     role: "bot",
     text:
       "Mình chưa chắc bạn đang cần tư vấn theo tiêu chí nào. Bạn có thể nhắn kiểu: 'tìm dây chuyền làm quà', 'bông tai thanh lịch' hoặc 'vòng tay trong ngân sách 2 triệu'.",
@@ -272,7 +280,7 @@ export default function ChatBox() {
     if (!trimmedText || isTyping) return;
 
     const userMessage: ChatMessage = {
-      id: crypto.randomUUID(),
+      id: createMessageId(),
       role: "user",
       text: trimmedText,
     };
@@ -321,7 +329,7 @@ export default function ChatBox() {
       setMessages((currentMessages) => [
         ...currentMessages,
         {
-          id: crypto.randomUUID(),
+          id: createMessageId(),
           role: "bot",
           text: aiText,
           products: matchedProducts.length > 0 ? matchedProducts : fallbackResponse.products,

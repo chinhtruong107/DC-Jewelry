@@ -11,9 +11,11 @@ export interface PriceRangeValue {
 }
 
 export type SortOption = "featured" | "price-asc" | "price-desc" | "name-asc";
+export type GoldKaratOption = "10k" | "14k" | "18k" | "24k";
 
 export interface ProductFilters {
   priceRange: PriceRangeValue;
+  goldKarats: GoldKaratOption[];
   bestSellerOnly: boolean;
   sort: SortOption;
 }
@@ -30,6 +32,13 @@ export const PRICE_RANGE_LIMITS: PriceRangeValue = {
 
 const PRICE_STEP = 100000;
 
+const GOLD_KARAT_OPTIONS: { id: GoldKaratOption; label: string; description: string }[] = [
+  { id: "10k", label: "10K", description: "Nhẹ giá, dễ đeo hằng ngày" },
+  { id: "14k", label: "14K", description: "Cân bằng độ bền và sắc vàng" },
+  { id: "18k", label: "18K", description: "Hàm lượng vàng cao, sang hơn" },
+  { id: "24k", label: "24K", description: "Vàng nguyên chất" },
+];
+
 const SORT_OPTIONS: { id: SortOption; label: string }[] = [
   { id: "featured", label: "Nổi bật" },
   { id: "price-asc", label: "Giá thấp đến cao" },
@@ -39,6 +48,7 @@ const SORT_OPTIONS: { id: SortOption; label: string }[] = [
 
 export const defaultProductFilters: ProductFilters = {
   priceRange: { ...PRICE_RANGE_LIMITS },
+  goldKarats: [],
   bestSellerOnly: false,
   sort: "featured",
 };
@@ -49,6 +59,7 @@ export default function ProductFilterSidebar({
 }: ProductFilterSidebarProps) {
   const [openSections, setOpenSections] = useState({
     price: true,
+    material: true,
     status: true,
     sort: true,
   });
@@ -58,8 +69,11 @@ export default function ProductFilterSidebar({
     filters.priceRange.max !== PRICE_RANGE_LIMITS.max;
 
   const activeCount = useMemo(
-    () => (priceRangeChanged ? 1 : 0) + (filters.bestSellerOnly ? 1 : 0),
-    [filters.bestSellerOnly, priceRangeChanged]
+    () =>
+      (priceRangeChanged ? 1 : 0) +
+      filters.goldKarats.length +
+      (filters.bestSellerOnly ? 1 : 0),
+    [filters.bestSellerOnly, filters.goldKarats.length, priceRangeChanged]
   );
 
   const minPercent =
@@ -79,10 +93,19 @@ export default function ProductFilterSidebar({
     onChange({ ...filters, priceRange });
   };
 
+  const toggleGoldKarat = (goldKarat: GoldKaratOption) => {
+    const nextGoldKarats = filters.goldKarats.includes(goldKarat)
+      ? filters.goldKarats.filter((item) => item !== goldKarat)
+      : [...filters.goldKarats, goldKarat];
+
+    onChange({ ...filters, goldKarats: nextGoldKarats });
+  };
+
   const clearFilters = () => {
     onChange({
       ...defaultProductFilters,
       priceRange: { ...PRICE_RANGE_LIMITS },
+      goldKarats: [],
     });
   };
 
@@ -176,6 +199,38 @@ export default function ProductFilterSidebar({
               <span>{formatVND(PRICE_RANGE_LIMITS.max)}</span>
             </div>
           </div>
+        </div>
+      </FilterSection>
+
+      <FilterSection title="Hàm lượng vàng" open={openSections.material} onToggle={() => toggleSection("material")}>
+        <div className="grid grid-cols-2 gap-2.5">
+          {GOLD_KARAT_OPTIONS.map((option) => {
+            const isSelected = filters.goldKarats.includes(option.id);
+
+            return (
+              <button
+                key={option.id}
+                type="button"
+                onClick={() => toggleGoldKarat(option.id)}
+                className={`group min-h-20 border px-3 py-2.5 text-left transition ${
+                  isSelected
+                    ? "border-[#d6bd7a] bg-[#d6bd7a]/12 text-[#f7efe1]"
+                    : "border-[#d6bd7a]/20 bg-black/20 text-[#cfc4ad]/72 hover:border-[#d6bd7a]/55 hover:text-[#f7efe1]"
+                }`}
+                aria-pressed={isSelected}
+              >
+                <span className="flex items-center justify-between gap-2">
+                  <span className="text-sm font-semibold">{option.label}</span>
+                  <span className={`grid h-4 w-4 shrink-0 place-items-center border ${isSelected ? "border-[#d6bd7a] bg-[#d6bd7a]" : "border-[#d6bd7a]/35"}`}>
+                    {isSelected && <Check className="h-3 w-3 text-black" />}
+                  </span>
+                </span>
+                <span className="mt-1 block text-[11px] leading-4 text-[#cfc4ad]/62">
+                  {option.description}
+                </span>
+              </button>
+            );
+          })}
         </div>
       </FilterSection>
 

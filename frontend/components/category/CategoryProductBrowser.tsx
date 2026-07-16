@@ -15,6 +15,22 @@ interface CategoryProductBrowserProps {
   categoryName: string;
 }
 
+function productMatchesGoldKarats(product: Product, goldKarats: ProductFilters["goldKarats"]) {
+  if (goldKarats.length === 0) return true;
+
+  const searchableText = [product.name, product.description, product.category]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+
+  return goldKarats.some((goldKarat) => {
+    const value = goldKarat.replace("k", "");
+    const pattern = new RegExp(`\\b${value}\\s*k\\b`, "i");
+
+    return pattern.test(searchableText);
+  });
+}
+
 export default function CategoryProductBrowser({
   products,
   categoryName,
@@ -26,9 +42,10 @@ export default function CategoryProductBrowser({
       const matchesPrice =
         product.price >= filters.priceRange.min &&
         product.price <= filters.priceRange.max;
+      const matchesGoldKarat = productMatchesGoldKarats(product, filters.goldKarats);
       const matchesStatus = !filters.bestSellerOnly || product.isBestSeller || product.is_best_seller;
 
-      return matchesPrice && matchesStatus;
+      return matchesPrice && matchesGoldKarat && matchesStatus;
     });
 
     return [...nextProducts].sort((a, b) => {

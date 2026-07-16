@@ -38,7 +38,7 @@ export default function Footer() {
           <div>
             <Link href="/" className="inline-block"><span className="block font-serif text-5xl tracking-[-0.05em]">Đức Chính</span><span className="mt-2 block text-[9px] font-bold uppercase tracking-[0.5em] text-[#e7c7b4]">Fine Jewelry</span></Link>
             <p className="mt-8 max-w-md text-sm leading-7 text-white/68">Những thiết kế mang tinh thần đương đại, được chọn lựa để đồng hành cùng bạn qua nhiều thế hệ.</p>
-            <div className="mt-8 flex flex-wrap gap-x-6 gap-y-3 text-xs text-white/70"><span className="flex items-center gap-2"><MapPin className="h-3.5 w-3.5" /> TP. Hồ Chí Minh</span><span className="flex items-center gap-2"><Phone className="h-3.5 w-3.5" /> 083 865 2005</span><span className="flex items-center gap-2"><Mail className="h-3.5 w-3.5" /> hello@ducchinhjewelry.vn</span></div>
+            <div className="mt-8 flex flex-wrap gap-x-6 gap-y-3 text-xs text-white/70"><span className="flex items-center gap-2"><MapPin className="h-3.5 w-3.5" /> Hà Nội</span><span className="flex items-center gap-2"><Phone className="h-3.5 w-3.5" /> 0389794445</span><span className="flex items-center gap-2"><Mail className="h-3.5 w-3.5" /> hello@ducchinhjewelry.vn</span></div>
           </div>
           {links.map((section) => <div key={section.title}><h4 className="text-[9px] font-bold uppercase tracking-[0.3em] text-[#e7c7b4]">{section.title}</h4><ul className="mt-6 space-y-4">{section.items.map(([href, label]) => <li key={label}><Link href={href} className="font-serif text-xl text-white/78 transition hover:text-white">{label}</Link></li>)}</ul></div>)}
         </div>

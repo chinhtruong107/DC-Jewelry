@@ -1,5 +1,5 @@
 {
-  "name": "perfume-ecommerce-template",
+  "name": "duc-chinh-jewelry-frontend",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -7,6 +7,9 @@
     "build": "next build",
     "start": "next start -H 0.0.0.0 -p 3002",
     "lint": "eslint . --ignore-pattern .next --ignore-pattern node_modules",
+    "typecheck": "tsc --noEmit --incremental false",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
     "dev:3002": "next dev -H 0.0.0.0 -p 3002"
   },
   "dependencies": {
@@ -27,6 +30,7 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
+    "@playwright/test": "^1.61.1",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^25.0.0",
     "@types/react": "^19.2.7",

@@ -34,14 +34,15 @@ return [
     'resend' => [
         'key' => env('RESEND_API_KEY'),
         'from' => env('RESEND_FROM_ADDRESS', env('MAIL_FROM_ADDRESS')),
+        'contact_to' => env('CONTACT_NOTIFICATION_EMAIL'),
     ],
 
     'vnpay' => [
         'payment_url' => env('VNPAY_PAYMENT_URL', 'https://sandbox.vnpayment.vn/paymentv2/vpcpay.html'),
         'tmn_code' => env('VNPAY_TMN_CODE'),
         'hash_secret' => env('VNPAY_HASH_SECRET'),
-        'return_url' => env('VNPAY_RETURN_URL', rtrim(env('APP_URL', 'http://localhost:8000'), '/').'/api/payments/vnpay/return'),
-        'frontend_url' => env('FRONTEND_URL', 'http://localhost:3000'),
+        'return_url' => env('VNPAY_RETURN_URL', rtrim(env('APP_URL', 'http://localhost:8002'), '/').'/api/payments/vnpay/return'),
+        'frontend_url' => env('FRONTEND_URL', 'http://localhost:3002'),
     ],
 
 ];

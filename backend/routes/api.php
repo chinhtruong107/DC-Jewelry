@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\CustomerEngagementController;
 use App\Http\Controllers\DonHangController;
 use App\Http\Controllers\FavoriteController;
 use App\Http\Controllers\LocationController;
@@ -17,6 +18,8 @@ Route::post('register', [AuthController::class, 'register']);
 Route::post('login', [AuthController::class, 'login']);
 Route::post('forgot-password', [AuthController::class, 'forgotPassword'])->middleware('throttle:5,1');
 Route::post('admin/login', [AdminController::class, 'login']);
+Route::post('contact-messages', [CustomerEngagementController::class, 'contact'])->middleware('throttle:5,1');
+Route::post('newsletter-subscriptions', [CustomerEngagementController::class, 'subscribe'])->middleware('throttle:5,1');
 Route::get('locations/provinces', [LocationController::class, 'provinces']);
 Route::get('locations/provinces/{provinceCode}/wards', [LocationController::class, 'wards']);
 
@@ -35,9 +38,7 @@ Route::get('product-images/{path}', function (string $path) {
 Route::get('products', [ProductController::class, 'index']);
 Route::get('products/{id}', [ProductController::class, 'show']);
 Route::get('products/{product}/reviews', [ProductReviewController::class, 'index']);
-Route::apiResource('don_hangs', DonHangController::class);
 Route::post('orders', [OrderController::class, 'store']);
-Route::get('orders/{order}', [OrderController::class, 'show']);
 Route::get('payments/vnpay/return', [VnpayPaymentController::class, 'handleReturn']);
 Route::get('payments/vnpay/ipn', [VnpayPaymentController::class, 'ipn']);
 
@@ -48,6 +49,7 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
     Route::put('products/{id}', [ProductController::class, 'update']);
     Route::patch('products/{id}', [ProductController::class, 'update']);
     Route::delete('products/{id}', [ProductController::class, 'destroy']);
+    Route::apiResource('don_hangs', DonHangController::class);
 });
 
 /*
@@ -72,6 +74,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::patch('/user', [AuthController::class, 'updateProfile']);
 
         Route::get('orders', [OrderController::class, 'index']);
+        Route::get('orders/{order}', [OrderController::class, 'show']);
         Route::patch('orders/{order}/cancel', [OrderController::class, 'cancel']);
         Route::patch('orders/{order}/status', [OrderController::class, 'updateStatus']);
         Route::post('reviews', [ProductReviewController::class, 'store']);

@@ -3,6 +3,7 @@
 import { createContext, useContext, useState, useEffect } from "react";
 import { Product } from "@/types/product";
 import { useAuth } from "@/context/AuthContext";
+import { readStoredValue, STORAGE_KEYS } from "@/lib/storageKeys";
 
 interface FavoritesContextType {
   favorites: Product[];
@@ -11,12 +12,11 @@ interface FavoritesContextType {
 }
 
 const FavoritesContext = createContext<FavoritesContextType | undefined>(undefined);
+const GUEST_STORAGE_KEY = STORAGE_KEYS.guestFavorites;
 
 export function FavoritesProvider({ children }: { children: React.ReactNode }) {
   const { token } = useAuth();
   const [favorites, setFavorites] = useState<Product[]>([]);
-
-  const guestStorageKey = "bloom_favorites_guest";
 
   useEffect(() => {
     if (token) {
@@ -51,7 +51,7 @@ export function FavoritesProvider({ children }: { children: React.ReactNode }) {
       return () => controller.abort();
     }
 
-    const stored = localStorage.getItem(guestStorageKey);
+    const stored = readStoredValue(GUEST_STORAGE_KEY);
 
     if (stored) {
       try {
@@ -73,7 +73,7 @@ export function FavoritesProvider({ children }: { children: React.ReactNode }) {
         : [...prev, product];
 
       if (!token) {
-        localStorage.setItem(guestStorageKey, JSON.stringify(nextFavorites));
+        localStorage.setItem(GUEST_STORAGE_KEY, JSON.stringify(nextFavorites));
       }
 
       return nextFavorites;

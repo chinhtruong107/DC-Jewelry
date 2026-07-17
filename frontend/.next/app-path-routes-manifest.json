@@ -10,10 +10,12 @@
   "/api/auth/login/route": "/api/auth/login",
   "/api/auth/register/route": "/api/auth/register",
   "/api/chat/route": "/api/chat",
+  "/api/contact/route": "/api/contact",
   "/api/favorites/[productId]/route": "/api/favorites/[productId]",
   "/api/favorites/route": "/api/favorites",
   "/api/locations/provinces/[provinceCode]/wards/route": "/api/locations/provinces/[provinceCode]/wards",
   "/api/locations/provinces/route": "/api/locations/provinces",
+  "/api/newsletter/route": "/api/newsletter",
   "/api/orders/[orderId]/cancel/route": "/api/orders/[orderId]/cancel",
   "/api/orders/route": "/api/orders",
   "/api/product-images/[...path]/route": "/api/product-images/[...path]",
@@ -34,5 +36,7 @@
   "/product/[productId]/page": "/product/[productId]",
   "/profile/page": "/profile",
   "/register/page": "/register",
-  "/search/page": "/search"
+  "/robots.txt/route": "/robots.txt",
+  "/search/page": "/search",
+  "/sitemap.xml/route": "/sitemap.xml"
 }

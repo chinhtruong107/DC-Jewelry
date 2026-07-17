@@ -14,6 +14,7 @@ import {
   type WardOption,
 } from "@/lib/locations";
 import { fixVietnameseText, formatVND, productImageUrl } from "@/lib/utils";
+import { STORAGE_KEYS } from "@/lib/storageKeys";
 import {
   AlertCircle,
   ArrowLeft,
@@ -338,7 +339,7 @@ export default function CheckoutPage() {
           return;
         }
 
-        localStorage.setItem("ducchinh_pending_vnpay_order", data.order_number || "");
+        localStorage.setItem(STORAGE_KEYS.pendingVnpayOrder, data.order_number || "");
         window.location.href = data.payment_url;
         return;
       }

@@ -7,11 +7,23 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import SiteShell from "@/components/layout/SiteShell";
 
 export const metadata: Metadata = {
-  title: "Đức Chính Jewelry - Trang sức cao cấp",
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "https://dcjewelry.duckdns.org"),
+  title: {
+    default: "Đức Chính Jewelry - Trang sức cao cấp",
+    template: "%s | Đức Chính Jewelry",
+  },
   description:
     "Đức Chính Jewelry tuyển chọn trang sức cao cấp với tinh thần chế tác tinh xảo, sang trọng và trường tồn.",
   icons: {
     icon: "/favicon.svg",
+  },
+  openGraph: {
+    type: "website",
+    locale: "vi_VN",
+    siteName: "Đức Chính Jewelry",
+    title: "Đức Chính Jewelry - Trang sức cao cấp",
+    description: "Trang sức cao cấp được tuyển chọn với tinh thần chế tác tinh xảo, sang trọng và trường tồn.",
+    images: [{ url: "/images/duc-chinh-editorial-hero.png", alt: "Đức Chính Jewelry" }],
   },
 };
 

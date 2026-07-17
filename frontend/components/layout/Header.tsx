@@ -6,6 +6,7 @@ import { fixVietnameseText, formatVND, productImageUrl } from "@/lib/utils";
 import type { Product } from "@/types/product";
 import { LogOut, Menu, Search, ShoppingBag, User as UserIcon, X } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import type React from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -128,7 +129,7 @@ function SearchSuggestions({ categorySuggestions, productSuggestions, onClose }:
 function SearchProductSuggestion({ product, onClick }: { product: Product; onClick: () => void }) {
   return (
     <Link href={`/product/${product.id}`} onClick={onClick} className="flex items-center gap-3 p-2 transition hover:bg-[#f5eee6]">
-      <img src={productImageUrl(product.image)} alt={product.name} className="h-14 w-14 shrink-0 bg-[#f0e8dc] object-cover" />
+      <Image src={productImageUrl(product.image)} alt={product.name} width={56} height={56} className="h-14 w-14 shrink-0 bg-[#f0e8dc] object-cover" />
       <div className="min-w-0 flex-1"><p className="line-clamp-1 text-sm font-medium text-[#28171a]">{product.name}</p><p className="mt-1 text-xs text-[#7a2130]">{formatVND(product.price)}</p></div>
     </Link>
   );

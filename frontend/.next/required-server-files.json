@@ -66,12 +66,12 @@
         {
           "protocol": "http",
           "hostname": "localhost",
-          "port": "8000"
+          "port": "8002"
         },
         {
           "protocol": "http",
           "hostname": "127.0.0.1",
-          "port": "8000"
+          "port": "8002"
         },
         {
           "protocol": "https",
@@ -85,7 +85,7 @@
       "qualities": [
         75
       ],
-      "unoptimized": true
+      "unoptimized": false
     },
     "devIndicators": {
       "position": "bottom-left"

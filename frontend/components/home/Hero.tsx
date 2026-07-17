@@ -41,7 +41,7 @@ export default function Hero() {
         <div className="relative z-10 flex min-h-[520px] flex-col justify-between px-5 py-8 sm:min-h-[600px] sm:px-10 lg:min-h-[760px] lg:px-16 lg:py-14 xl:px-24">
           <div className="flex items-center justify-between gap-4 border-b border-[#28171a]/15 pb-5 text-[10px] font-semibold uppercase tracking-[0.22em] text-[#7a2130] sm:tracking-[0.28em]">
             <span>Fine jewelry · 2026</span>
-            <span>Saigon</span>
+            <span>Hà Nội</span>
           </div>
 
           <div className="py-10 sm:py-14 lg:py-20">

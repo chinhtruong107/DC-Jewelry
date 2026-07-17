@@ -265,181 +265,181 @@ body::before {
   border: 2px solid #f5f0e7;
 }
 
-.bloom-admin-redesign .border-orange-100 {
+.dc-admin-redesign .border-orange-100 {
   border-color: rgba(214, 189, 122, 0.22) !important;
 }
 
-.bloom-admin-redesign .border-orange-200 {
+.dc-admin-redesign .border-orange-200 {
   border-color: rgba(214, 189, 122, 0.36) !important;
 }
 
-.bloom-admin-redesign .border-orange-300 {
+.dc-admin-redesign .border-orange-300 {
   border-color: rgba(214, 189, 122, 0.55) !important;
 }
 
-.bloom-admin-redesign .bg-orange-50,
-.bloom-admin-redesign .bg-orange-50\/60,
-.bloom-admin-redesign .bg-orange-50\/70 {
+.dc-admin-redesign .bg-orange-50,
+.dc-admin-redesign .bg-orange-50\/60,
+.dc-admin-redesign .bg-orange-50\/70 {
   background-color: rgba(214, 189, 122, 0.08) !important;
 }
 
-.bloom-admin-redesign .bg-orange-100 {
+.dc-admin-redesign .bg-orange-100 {
   background-color: rgba(214, 189, 122, 0.14) !important;
 }
 
-.bloom-admin-redesign .bg-orange-300,
-.bloom-admin-redesign .bg-orange-400,
-.bloom-admin-redesign .bg-orange-500 {
+.dc-admin-redesign .bg-orange-300,
+.dc-admin-redesign .bg-orange-400,
+.dc-admin-redesign .bg-orange-500 {
   background-color: #d6bd7a !important;
 }
 
-.bloom-admin-redesign .text-orange-500,
-.bloom-admin-redesign .text-orange-600,
-.bloom-admin-redesign .text-orange-700,
-.bloom-admin-redesign .text-orange-800 {
+.dc-admin-redesign .text-orange-500,
+.dc-admin-redesign .text-orange-600,
+.dc-admin-redesign .text-orange-700,
+.dc-admin-redesign .text-orange-800 {
   color: #d6bd7a !important;
 }
 
-.bloom-admin-redesign .fill-orange-400 {
+.dc-admin-redesign .fill-orange-400 {
   fill: #d6bd7a !important;
 }
 
-.bloom-admin-redesign .accent-orange-500 {
+.dc-admin-redesign .accent-orange-500 {
   accent-color: #d6bd7a !important;
 }
 
-.bloom-admin-redesign .hover\:bg-orange-50:hover {
+.dc-admin-redesign .hover\:bg-orange-50:hover {
   background-color: rgba(214, 189, 122, 0.14) !important;
 }
 
-.bloom-admin-redesign .hover\:bg-orange-600:hover {
+.dc-admin-redesign .hover\:bg-orange-600:hover {
   background-color: #f4df9b !important;
 }
 
-.bloom-admin-redesign .hover\:text-orange-700:hover {
+.dc-admin-redesign .hover\:text-orange-700:hover {
   color: #f4df9b !important;
 }
 
-.bloom-admin-redesign .focus\:border-orange-400:focus {
+.dc-admin-redesign .focus\:border-orange-400:focus {
   border-color: rgba(214, 189, 122, 0.72) !important;
 }
 
-.bloom-admin-redesign .focus\:ring-orange-100:focus {
+.dc-admin-redesign .focus\:ring-orange-100:focus {
   --tw-ring-color: rgba(214, 189, 122, 0.28) !important;
 }
 
-.bloom-admin-redesign .border-amber-300,
-.bloom-admin-redesign .border-amber-400\/20,
-.bloom-admin-redesign .border-amber-400\/25 {
+.dc-admin-redesign .border-amber-300,
+.dc-admin-redesign .border-amber-400\/20,
+.dc-admin-redesign .border-amber-400\/25 {
   border-color: rgba(214, 189, 122, 0.28) !important;
 }
 
-.bloom-admin-redesign .bg-amber-50,
-.bloom-admin-redesign .bg-amber-100,
-.bloom-admin-redesign .bg-amber-400\/10,
-.bloom-admin-redesign .bg-amber-400\/\[0\.07\] {
+.dc-admin-redesign .bg-amber-50,
+.dc-admin-redesign .bg-amber-100,
+.dc-admin-redesign .bg-amber-400\/10,
+.dc-admin-redesign .bg-amber-400\/\[0\.07\] {
   background-color: rgba(214, 189, 122, 0.08) !important;
 }
 
-.bloom-admin-redesign .bg-amber-400 {
+.dc-admin-redesign .bg-amber-400 {
   background-color: #d6bd7a !important;
 }
 
-.bloom-admin-redesign .text-amber-100,
-.bloom-admin-redesign .text-amber-100\/65,
-.bloom-admin-redesign .text-amber-100\/70,
-.bloom-admin-redesign .text-amber-100\/80,
-.bloom-admin-redesign .text-amber-200,
-.bloom-admin-redesign .text-amber-300,
-.bloom-admin-redesign .text-amber-700 {
+.dc-admin-redesign .text-amber-100,
+.dc-admin-redesign .text-amber-100\/65,
+.dc-admin-redesign .text-amber-100\/70,
+.dc-admin-redesign .text-amber-100\/80,
+.dc-admin-redesign .text-amber-200,
+.dc-admin-redesign .text-amber-300,
+.dc-admin-redesign .text-amber-700 {
   color: #d6bd7a !important;
 }
 
-.bloom-admin-redesign .border-zinc-200,
-.bloom-admin-redesign .border-slate-100,
-.bloom-admin-redesign .border-slate-200,
-.bloom-admin-redesign .border-slate-300 {
+.dc-admin-redesign .border-zinc-200,
+.dc-admin-redesign .border-slate-100,
+.dc-admin-redesign .border-slate-200,
+.dc-admin-redesign .border-slate-300 {
   border-color: rgba(214, 189, 122, 0.2) !important;
 }
 
-.bloom-admin-redesign .bg-white,
-.bloom-admin-redesign .bg-zinc-50,
-.bloom-admin-redesign .bg-slate-50,
-.bloom-admin-redesign .bg-slate-100,
-.bloom-admin-redesign .bg-zinc-950,
-.bloom-admin-redesign .bg-slate-900 {
+.dc-admin-redesign .bg-white,
+.dc-admin-redesign .bg-zinc-50,
+.dc-admin-redesign .bg-slate-50,
+.dc-admin-redesign .bg-slate-100,
+.dc-admin-redesign .bg-zinc-950,
+.dc-admin-redesign .bg-slate-900 {
   background-color: #0d0b0a !important;
 }
 
-.bloom-admin-redesign .text-slate-950,
-.bloom-admin-redesign .text-slate-900,
-.bloom-admin-redesign .text-zinc-950,
-.bloom-admin-redesign .text-white {
+.dc-admin-redesign .text-slate-950,
+.dc-admin-redesign .text-slate-900,
+.dc-admin-redesign .text-zinc-950,
+.dc-admin-redesign .text-white {
   color: #f7efe1 !important;
 }
 
-.bloom-admin-redesign .text-slate-700,
-.bloom-admin-redesign .text-slate-600,
-.bloom-admin-redesign .text-zinc-700 {
+.dc-admin-redesign .text-slate-700,
+.dc-admin-redesign .text-slate-600,
+.dc-admin-redesign .text-zinc-700 {
   color: rgba(247, 239, 225, 0.86) !important;
 }
 
-.bloom-admin-redesign .text-slate-500,
-.bloom-admin-redesign .text-slate-400,
-.bloom-admin-redesign .text-zinc-500,
-.bloom-admin-redesign .text-zinc-400 {
+.dc-admin-redesign .text-slate-500,
+.dc-admin-redesign .text-slate-400,
+.dc-admin-redesign .text-zinc-500,
+.dc-admin-redesign .text-zinc-400 {
   color: rgba(207, 196, 173, 0.74) !important;
 }
 
-.bloom-admin-redesign .rounded-lg,
-.bloom-admin-redesign .rounded-md,
-.bloom-admin-redesign .rounded-full,
-.bloom-admin-redesign .rounded-xl,
-.bloom-admin-redesign .rounded-2xl {
+.dc-admin-redesign .rounded-lg,
+.dc-admin-redesign .rounded-md,
+.dc-admin-redesign .rounded-full,
+.dc-admin-redesign .rounded-xl,
+.dc-admin-redesign .rounded-2xl {
   border-radius: 0 !important;
 }
 
-.bloom-admin-redesign input:not([type="checkbox"]),
-.bloom-admin-redesign select,
-.bloom-admin-redesign textarea {
+.dc-admin-redesign input:not([type="checkbox"]),
+.dc-admin-redesign select,
+.dc-admin-redesign textarea {
   background-color: rgba(0, 0, 0, 0.28) !important;
   border-color: rgba(214, 189, 122, 0.28) !important;
   color: #f7efe1 !important;
 }
 
-.bloom-admin-redesign input::placeholder,
-.bloom-admin-redesign textarea::placeholder {
+.dc-admin-redesign input::placeholder,
+.dc-admin-redesign textarea::placeholder {
   color: rgba(207, 196, 173, 0.52) !important;
   opacity: 1;
 }
 
-.bloom-admin-redesign input:focus,
-.bloom-admin-redesign select:focus,
-.bloom-admin-redesign textarea:focus {
+.dc-admin-redesign input:focus,
+.dc-admin-redesign select:focus,
+.dc-admin-redesign textarea:focus {
   border-color: rgba(214, 189, 122, 0.7) !important;
   box-shadow: 0 0 0 3px rgba(214, 189, 122, 0.24) !important;
 }
 
-.bloom-admin-redesign .bg-transparent input,
-.bloom-admin-redesign input.bg-transparent {
+.dc-admin-redesign .bg-transparent input,
+.dc-admin-redesign input.bg-transparent {
   background-color: transparent !important;
 }
 
-.dark .bloom-admin-redesign .dark\:border-orange-500\/20,
-.dark .bloom-admin-redesign .dark\:border-orange-500\/30,
-.dark .bloom-admin-redesign .dark\:border-orange-500\/40 {
+.dark .dc-admin-redesign .dark\:border-orange-500\/20,
+.dark .dc-admin-redesign .dark\:border-orange-500\/30,
+.dark .dc-admin-redesign .dark\:border-orange-500\/40 {
   border-color: rgba(214, 189, 122, 0.34) !important;
 }
 
-.dark .bloom-admin-redesign .dark\:bg-orange-500\/10,
-.dark .bloom-admin-redesign .dark\:bg-orange-500\/15 {
+.dark .dc-admin-redesign .dark\:bg-orange-500\/10,
+.dark .dc-admin-redesign .dark\:bg-orange-500\/15 {
   background-color: rgba(214, 189, 122, 0.12) !important;
 }
 
-.dark .bloom-admin-redesign .dark\:text-orange-100,
-.dark .bloom-admin-redesign .dark\:text-orange-100\/80,
-.dark .bloom-admin-redesign .dark\:text-orange-200,
-.dark .bloom-admin-redesign .dark\:text-orange-300 {
+.dark .dc-admin-redesign .dark\:text-orange-100,
+.dark .dc-admin-redesign .dark\:text-orange-100\/80,
+.dark .dc-admin-redesign .dark\:text-orange-200,
+.dark .dc-admin-redesign .dark\:text-orange-300 {
   color: #d6bd7a !important;
 }
 

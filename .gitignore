@@ -2,3 +2,15 @@
 backend/node_modules/
 node_modules/
 backend/vendor/
+
+# Frontend build and test artifacts
+frontend/.next/
+frontend/test-results/
+frontend/playwright-report/
+frontend/tsconfig.tsbuildinfo
+
+# Laravel runtime and PHPUnit artifacts
+backend/.phpunit.result.cache
+backend/storage/framework/cache/data/
+backend/storage/framework/sessions/
+backend/storage/framework/views/

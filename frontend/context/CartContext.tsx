@@ -1,6 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useState } from "react";
+import { readStoredValue, removeStoredValue, STORAGE_KEYS } from "@/lib/storageKeys";
 
 interface CartItem {
   id: number;
@@ -25,7 +26,7 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
   const [cart, setCart] = useState<CartItem[]>([]);
 
   useEffect(() => {
-    const savedCart = localStorage.getItem("cart");
+    const savedCart = readStoredValue(STORAGE_KEYS.cart);
     if (savedCart) {
       const parsedCart = JSON.parse(savedCart) as CartItem[];
       setCart(parsedCart);
@@ -59,7 +60,7 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   useEffect(() => {
-    localStorage.setItem("cart", JSON.stringify(cart));
+    localStorage.setItem(STORAGE_KEYS.cart, JSON.stringify(cart));
   }, [cart]);
 
   const addToCart = (item: CartItem) => {
@@ -85,7 +86,7 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
 
   const clearCart = () => {
     setCart([]);
-    localStorage.removeItem("cart");
+    removeStoredValue(STORAGE_KEYS.cart);
   };
 
   const updateQuantity = (id: number, quantity: number) => {

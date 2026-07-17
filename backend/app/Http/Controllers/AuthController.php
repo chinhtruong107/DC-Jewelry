@@ -67,7 +67,7 @@ class AuthController extends Controller
         $validated = $request->validate([
             'email' => ['required', 'string', 'email'],
         ]);
-        $successMessage = 'VANHPERFUME đã gửi mật khẩu mới đến email của bạn. Vui lòng kiểm tra hộp thư.';
+        $successMessage = 'Đức Chính Jewelry đã gửi mật khẩu mới đến email của bạn. Vui lòng kiểm tra hộp thư.';
 
         $user = User::query()
             ->where('email', $validated['email'])

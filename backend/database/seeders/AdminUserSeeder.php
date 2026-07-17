@@ -11,7 +11,7 @@ class AdminUserSeeder extends Seeder
     public function run(): void
     {
         User::updateOrCreate(
-            ['email' => env('ADMIN_EMAIL', 'admin@bloom.local')],
+            ['email' => env('ADMIN_EMAIL', 'admin@ducchinhjewelry.local')],
             [
                 'name' => env('ADMIN_NAME', 'Admin'),
                 'phone' => env('ADMIN_PHONE'),

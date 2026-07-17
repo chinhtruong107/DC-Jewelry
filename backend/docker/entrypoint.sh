@@ -13,7 +13,7 @@ echo "Waiting for database at ${DB_HOST:-mysql}:${DB_PORT:-3306}..."
 php -r '
 $host = getenv("DB_HOST") ?: "mysql";
 $port = getenv("DB_PORT") ?: "3306";
-$db = getenv("DB_DATABASE") ?: "perfume";
+$db = getenv("DB_DATABASE") ?: "jewelry";
 $user = getenv("DB_USERNAME") ?: "admin";
 $pass = getenv("DB_PASSWORD") ?: "";
 try {
@@ -31,7 +31,7 @@ try {
 php -r '
 $host = getenv("DB_HOST") ?: "mysql";
 $port = getenv("DB_PORT") ?: "3306";
-$db = getenv("DB_DATABASE") ?: "perfume";
+$db = getenv("DB_DATABASE") ?: "jewelry";
 $user = getenv("DB_USERNAME") ?: "admin";
 $pass = getenv("DB_PASSWORD") ?: "";
 $deadline = time() + 60;

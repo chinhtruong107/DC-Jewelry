@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useCart } from "@/context/CartContext";
 import { formatVND } from "@/lib/utils";
+import { removeStoredValue, STORAGE_KEYS } from "@/lib/storageKeys";
 
 function VnpayResultContent() {
   const searchParams = useSearchParams();
@@ -25,7 +26,7 @@ function VnpayResultContent() {
   useEffect(() => {
     if (isSuccess) {
       clearCart();
-      localStorage.removeItem("bloom_pending_vnpay_order");
+      removeStoredValue(STORAGE_KEYS.pendingVnpayOrder);
     }
   }, [clearCart, isSuccess]);
 

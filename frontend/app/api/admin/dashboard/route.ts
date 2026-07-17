@@ -21,7 +21,7 @@ export async function GET(request: Request) {
     console.error("Admin dashboard proxy error:", error);
 
     return NextResponse.json(
-      { message: "Không kết nối được tới Laravel API. Hãy kiểm tra backend đang chạy ở port 8000." },
+      { message: "Không kết nối được tới Laravel API. Hãy kiểm tra backend đang chạy ở port 8002." },
       { status: 502 }
     );
   }

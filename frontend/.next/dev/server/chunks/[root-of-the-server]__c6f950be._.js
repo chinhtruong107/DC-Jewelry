@@ -52,7 +52,7 @@ __turbopack_context__.s([
 ]);
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$server$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/next/server.js [app-route] (ecmascript)");
 ;
-const API_BASE_URL = process.env.LARAVEL_API_URL ?? "http://127.0.0.1:8001/api";
+const API_BASE_URL = process.env.LARAVEL_API_URL ?? "http://127.0.0.1:8002/api";
 async function GET(request) {
     try {
         const url = new URL(request.url);

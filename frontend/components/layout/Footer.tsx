@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight, Instagram, Mail, MapPin, Phone } from "lucide-react";
+import { ArrowRight, CheckCircle2, Instagram, LoaderCircle, Mail, MapPin, Phone } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type React from "react";
@@ -11,8 +11,31 @@ export default function Footer() {
   const { user, isAuthReady } = useAuth();
   const pathname = usePathname();
   const [email, setEmail] = useState("");
+  const [newsletterState, setNewsletterState] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [newsletterMessage, setNewsletterMessage] = useState("");
   const showNewsletter = isAuthReady && !user && pathname !== "/checkout";
-  const handleNewsletterSubmit = (event: React.FormEvent) => { event.preventDefault(); setEmail(""); };
+  const handleNewsletterSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setNewsletterState("loading");
+    setNewsletterMessage("");
+
+    try {
+      const response = await fetch("/api/newsletter", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, source: "website_footer" }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || "Chưa thể đăng ký nhận tin.");
+
+      setNewsletterState("success");
+      setNewsletterMessage(data.message);
+      setEmail("");
+    } catch (error) {
+      setNewsletterState("error");
+      setNewsletterMessage(error instanceof Error ? error.message : "Chưa thể đăng ký nhận tin.");
+    }
+  };
 
   const links = [
     { title: "Collections", items: [["/category/day-chuyen", "Dây chuyền"], ["/category/bong-tai", "Bông tai"], ["/category/vong-tay", "Vòng tay"]] },
@@ -25,10 +48,16 @@ export default function Footer() {
         <div className="border-b border-white/15">
           <div className="mx-auto grid max-w-[1600px] gap-8 px-6 py-16 sm:px-10 lg:grid-cols-[1fr_0.8fr] lg:items-end lg:px-16 xl:px-24">
             <div><p className="text-[9px] font-bold uppercase tracking-[0.32em] text-[#e7c7b4]">Private access</p><h3 className="mt-4 max-w-2xl font-serif text-4xl font-normal leading-tight sm:text-5xl">Những câu chuyện mới,<br /><span className="italic text-[#e9c6b2]">gửi riêng đến bạn.</span></h3></div>
-            <form onSubmit={handleNewsletterSubmit} className="flex border-b border-white/45 pb-3">
-              <input type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="Email của bạn" className="min-w-0 flex-1 bg-transparent text-sm text-white outline-none placeholder:text-white/55" required />
-              <button type="submit" className="grid h-10 w-10 place-items-center rounded-full bg-[#fff9ef] text-[#681a28] transition hover:translate-x-1" aria-label="Đăng ký"><ArrowRight className="h-4 w-4" /></button>
-            </form>
+            <div>
+              <form onSubmit={handleNewsletterSubmit} className="flex border-b border-white/45 pb-3">
+                <label htmlFor="newsletter-email" className="sr-only">Email đăng ký nhận tin</label>
+                <input id="newsletter-email" type="email" value={email} onChange={(event) => { setEmail(event.target.value); setNewsletterState("idle"); setNewsletterMessage(""); }} placeholder="Email của bạn" className="min-w-0 flex-1 bg-transparent text-sm text-white outline-none placeholder:text-white/55" required disabled={newsletterState === "loading"} />
+                <button type="submit" disabled={newsletterState === "loading"} className="grid h-10 w-10 place-items-center rounded-full bg-[#fff9ef] text-[#681a28] transition hover:translate-x-1 disabled:cursor-wait disabled:opacity-70" aria-label="Đăng ký nhận tin">
+                  {newsletterState === "loading" ? <LoaderCircle className="h-4 w-4 animate-spin" /> : newsletterState === "success" ? <CheckCircle2 className="h-4 w-4" /> : <ArrowRight className="h-4 w-4" />}
+                </button>
+              </form>
+              {newsletterMessage && <p role={newsletterState === "error" ? "alert" : "status"} className={`mt-3 text-xs leading-5 ${newsletterState === "error" ? "text-red-200" : "text-[#f4d8c7]"}`}>{newsletterMessage}</p>}
+            </div>
           </div>
         </div>
       )}
@@ -44,7 +73,7 @@ export default function Footer() {
         </div>
 
         <div className="mt-16 flex flex-col gap-5 border-t border-white/15 pt-6 text-[9px] font-semibold uppercase tracking-[0.2em] text-white/48 sm:flex-row sm:items-center sm:justify-between">
-          <span>© 2026 Đức Chính Jewelry</span><span className="inline-flex items-center gap-2"><Instagram className="h-3.5 w-3.5" /> Instagram</span><span>Saigon · Vietnam</span>
+          <span>© 2026 Đức Chính Jewelry</span><span className="inline-flex items-center gap-2"><Instagram className="h-3.5 w-3.5" /> Instagram</span><span>Hà Nội · Việt Nam</span>
         </div>
       </div>
     </footer>

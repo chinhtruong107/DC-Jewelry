@@ -2,6 +2,7 @@ import CategoryProductBrowser from "@/components/category/CategoryProductBrowser
 import { fixVietnameseText } from "@/lib/utils";
 import type { Product } from "@/types/product";
 import { notFound } from "next/navigation";
+import type { Metadata } from "next";
 
 const API_BASE_URL = process.env.LARAVEL_API_URL ?? "http://127.0.0.1:8002/api";
 
@@ -28,6 +29,23 @@ const categoryMap: Record<string, { name: string; sourceNames: string[]; eyebrow
       "Những thiết kế lắc tay và vòng kiềng mềm mại, cân bằng giữa vẻ tinh xảo của trang sức vàng và cảm giác hiện đại khi phối hằng ngày.",
   },
 };
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const category = categoryMap[slug];
+  if (!category) return { title: "Bộ sưu tập" };
+
+  return {
+    title: category.name,
+    description: category.intro,
+    alternates: { canonical: `/category/${slug}` },
+    openGraph: {
+      title: `${category.name} | Đức Chính Jewelry`,
+      description: category.intro,
+      url: `/category/${slug}`,
+    },
+  };
+}
 
 async function getProducts(): Promise<Product[]> {
   try {

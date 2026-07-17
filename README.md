@@ -1,215 +1,142 @@
-# VANHPERFUME
+# Đức Chính Jewelry
 
-VANHPERFUME là website bán nước hoa nguyên chai, gồm Laravel REST API ở backend và Next.js ở frontend. Dự án đã được cấu hình sẵn để chạy:
-
-- Frontend: http://localhost:3002
-- Backend API: http://localhost:8002/api
-- Cơ sở dữ liệu: Amazon RDS MySQL `perfume`
+Website thương mại điện tử trang sức cao cấp gồm Laravel REST API, Next.js storefront/admin và Docker Compose. Dự án hỗ trợ danh mục sản phẩm, tìm kiếm, giỏ hàng, yêu thích, tài khoản, đánh giá, checkout COD/VNPay, quản trị đơn hàng và chatbot tư vấn.
 
 ## Công nghệ
 
-Backend:
+- Frontend: Next.js 16, React 19, TypeScript, Tailwind CSS, Radix UI, Framer Motion
+- Backend: Laravel 10, PHP 8.2, Sanctum, MySQL
+- Tích hợp: VNPay sandbox, Resend, Gemini
+- Vận hành: Docker Compose, GitHub Actions, Ansible
 
-- Laravel 10
-- PHP 8.2+
-- MySQL / Amazon RDS
-- Laravel Sanctum
-- VNPay sandbox
+## Cổng mặc định
 
-Frontend:
-
-- Next.js 16
-- React 19
-- TypeScript
-- Tailwind CSS
-- Radix UI / shadcn style components
-- Framer Motion
-
-## Cấu trúc thư mục
-
-```text
-perfume/
-|-- backend/          # Laravel REST API
-|-- frontend/         # Next.js app
-|-- docker-compose.yml
-|-- .env              # env tổng cho docker/payment/frontend URL
-`-- README.md
-```
-
-## Cấu hình mặc định
-
-| Thành phần | URL |
+| Thành phần | Địa chỉ |
 | --- | --- |
-| Frontend | http://localhost:3002 |
-| Backend API | http://localhost:8002/api |
-| VNPay return | http://localhost:8002/api/payments/vnpay/return |
+| Storefront và admin | http://localhost:3002 |
+| Laravel API | http://localhost:8002/api |
+| Trang admin | http://localhost:3002/admin |
 
-## Chạy từ thư mục root
-
-Dự án có `package.json` ở root để gọi nhanh các lệnh:
+## Chạy bằng Docker
 
 ```powershell
-cd D:\perfume
-npm run dev:backend    # Laravel API tại http://localhost:8002
-npm run dev:frontend   # Next.js tại http://localhost:3002
+cd D:\trangsuc
+docker compose up -d --build
+docker compose logs -f backend frontend
 ```
 
-## Chạy thủ công không dùng Docker
+Backend tự chạy migration và seed dữ liệu địa giới hành chính khi container khởi động. Chỉ đặt `RUN_SEEDERS=true` khi cần nạp lại toàn bộ dữ liệu demo.
 
-Mở 2 terminal riêng.
+## Chạy thủ công
 
-### 1. Backend Laravel trên port 8002
+Mở hai terminal riêng.
 
 ```powershell
-cd D:\perfume\backend
+cd D:\trangsuc\backend
 composer install
 php artisan key:generate
 php artisan migrate
-php artisan db:seed --class=AdminUserSeeder
-php artisan serve --host=127.0.0.1 --port=8002
+php artisan serve --host=0.0.0.0 --port=8002
 ```
-
-Có thể chạy bằng npm script đã thêm:
 
 ```powershell
-cd D:\perfume\backend
-npm run serve
-```
-
-Backend `.env` cần có các giá trị chính:
-
-```env
-APP_NAME=VANHPERFUME
-APP_URL=http://localhost:8002
-DB_CONNECTION=mysql
-DB_DATABASE=perfume
-FRONTEND_URL=http://localhost:3002
-VNPAY_RETURN_URL=http://localhost:8002/api/payments/vnpay/return
-```
-
-### 2. Frontend Next.js trên port 3002
-
-```powershell
-cd D:\perfume\frontend
+cd D:\trangsuc\frontend
 npm install
 npm run dev
 ```
 
-Frontend `.env.local` cần có:
+## Cấu hình môi trường
+
+Sao chép `backend/.env.example` thành `backend/.env`, sau đó cấu hình tối thiểu:
 
 ```env
-NEXT_PUBLIC_API_URL=http://localhost:8002/api
+APP_NAME="Duc Chinh Jewelry"
+APP_URL=http://localhost:8002
+FRONTEND_URL=http://localhost:3002
+
+DB_CONNECTION=mysql
+DB_HOST=your-database-host
+DB_PORT=3306
+DB_DATABASE=jewelry
+DB_USERNAME=your-database-user
+DB_PASSWORD=your-database-password
+
+RESEND_API_KEY=
+RESEND_FROM_ADDRESS="Duc Chinh Jewelry <onboarding@resend.dev>"
+CONTACT_NOTIFICATION_EMAIL=hello@ducchinhjewelry.vn
+
+VNPAY_TMN_CODE=
+VNPAY_HASH_SECRET=
+VNPAY_RETURN_URL=http://localhost:8002/api/payments/vnpay/return
+```
+
+Frontend dùng API cùng origin `/api`; route handler Next.js gọi Laravel qua:
+
+```env
+NEXT_PUBLIC_API_URL=/api
 LARAVEL_API_URL=http://127.0.0.1:8002/api
 ```
 
-`frontend/package.json` đã cấu hình:
+## Contact và newsletter
 
-```json
-{
-  "scripts": {
-    "dev": "next dev -p 3002",
-    "start": "next start -p 3002"
-  }
-}
-```
+- `POST /api/contact-messages`: lưu yêu cầu vào `contact_messages` và gửi thông báo Resend khi có `CONTACT_NOTIFICATION_EMAIL`.
+- `POST /api/newsletter-subscriptions`: lưu đăng ký nhận tin theo email, không tạo bản ghi trùng.
+- Dữ liệu vẫn được lưu nếu Resend tạm thời không gửi được.
 
-## Chạy bằng Docker
-
-Docker đã được cấu hình để container và host dùng cùng cổng:
-
-- Frontend container: `3002`, publish ra host `3002`
-- Backend container: `8002`, publish ra host `8002`
+Sau khi cập nhật code, chạy migration:
 
 ```powershell
-cd D:\perfume
-docker compose up -d --build
-```
-
-Sau khi chạy:
-
-- Frontend: http://localhost:3002
-- Backend API: http://localhost:8002/api
-- Frontend trong Docker gọi backend qua `http://backend:8002/api`
-
-Tắt Docker:
-
-```powershell
-docker compose down
-```
-
-Xem log:
-
-```powershell
-docker compose logs -f backend
-docker compose logs -f frontend
-```
-
-## Lệnh hữu ích
-
-### Backend
-
-```powershell
-cd D:\perfume\backend
+cd D:\trangsuc\backend
 php artisan migrate
-php artisan db:seed
-php artisan products:sync-images
-php artisan products:sync-catalog
 ```
 
-### Frontend
+## Kiểm tra chất lượng
 
 ```powershell
-cd D:\perfume\frontend
+cd D:\trangsuc\frontend
 npm run lint
+npm run typecheck
 npm run build
-npm run dev
+npm run test:e2e
 ```
 
-## Tài khoản admin
-
-Admin là user có `role=admin` trong bảng `users`. Nếu dùng seeder mặc định:
-
-```text
-Email: admin@vanhperfume.local
-Password: 123456
+```powershell
+cd D:\trangsuc\backend
+php artisan test
+php vendor/bin/pint --test
 ```
 
-Trang admin:
+## Tài khoản quản trị
 
-```text
-http://localhost:3002/admin
+Tạo quản trị viên qua biến môi trường `ADMIN_NAME`, `ADMIN_EMAIL`, `ADMIN_PASSWORD`, rồi chạy:
+
+```powershell
+php artisan db:seed --class=AdminUserSeeder
 ```
+
+Không dùng mật khẩu mẫu trên môi trường thật.
 
 ## API chính
 
-| Method | Endpoint | Mô tả |
+| Method | Endpoint | Chức năng |
 | --- | --- | --- |
-| POST | /api/register | Đăng ký tài khoản |
-| POST | /api/login | Đăng nhập người dùng |
-| POST | /api/logout | Đăng xuất |
-| GET | /api/products | Danh sách nước hoa |
-| GET | /api/products/{id} | Chi tiết sản phẩm |
-| POST | /api/orders | Tạo đơn hàng |
-| GET | /api/orders | Lịch sử đơn hàng của user đăng nhập |
-| PATCH | /api/orders/{id}/status | Cập nhật trạng thái đơn hàng |
-| GET | /api/favorites | Danh sách yêu thích |
-| POST | /api/favorites/{product} | Thêm vào yêu thích |
-| DELETE | /api/favorites/{product} | Xóa khỏi yêu thích |
-| GET | /api/admin/dashboard | Dashboard admin |
+| POST | `/api/register` | Đăng ký |
+| POST | `/api/login` | Đăng nhập |
+| POST | `/api/forgot-password` | Khôi phục mật khẩu |
+| GET | `/api/products` | Danh sách sản phẩm |
+| GET | `/api/products/{id}` | Chi tiết sản phẩm |
+| POST | `/api/orders` | Tạo đơn hàng |
+| GET | `/api/orders` | Đơn hàng của tài khoản |
+| PATCH | `/api/orders/{id}/cancel` | Hủy đơn hợp lệ |
+| GET/POST/DELETE | `/api/favorites` | Quản lý yêu thích |
+| POST | `/api/reviews` | Đánh giá sản phẩm đã mua |
+| POST | `/api/contact-messages` | Gửi yêu cầu liên hệ |
+| POST | `/api/newsletter-subscriptions` | Đăng ký nhận tin |
+| GET | `/api/admin/dashboard` | Dữ liệu dashboard quản trị |
 
-## Ghi chu
+## Lưu ý bảo mật
 
-- Website chi ban nuoc hoa nguyen chai.
-- Checkout khong render footer/chat de tranh che nut thanh toan.
-- Neu frontend khong goi duoc API, kiem tra backend dang chay tai `http://localhost:8002/api/products`.
-- Neu doi env, hay restart lai server frontend/backend.
-
-## Bao mat
-
-Khong commit file env that neu dua project len repo public:
-
-```text
-.env
-backend/.env
-frontend/.env.local
-```
+- Không commit `.env`, log, session, cache, `.next` hoặc `tsconfig.tsbuildinfo`.
+- Dùng secrets của hệ thống deploy cho database, Resend, Gemini và VNPay.
+- Tắt `APP_DEBUG` và dùng `APP_ENV=production` khi triển khai thật.
+- Xoay khóa ngay nếu khóa từng xuất hiện trong lịch sử Git.

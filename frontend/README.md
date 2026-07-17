@@ -1,35 +1,29 @@
-# Bloom Frontend
+# Đức Chính Jewelry Frontend
 
-Frontend Next.js cho website bán kính Bloom.
+Ứng dụng Next.js cho cửa hàng trang sức Đức Chính Jewelry. Sản phẩm, tồn kho, đơn hàng, tài khoản, liên hệ và đăng ký newsletter đều sử dụng Laravel API qua các route proxy cùng origin trong `app/api`.
 
-## Dữ liệu
-
-- Sản phẩm, ảnh sản phẩm, tồn kho, đơn hàng và khách hàng được lấy từ Laravel API.
-- Frontend không còn dùng dữ liệu mẫu trong `frontend/data`.
-- API proxy nội bộ nằm trong `app/api/*` để frontend gọi backend ổn định hơn.
-
-## Chạy dự án
+## Chạy cục bộ
 
 ```bash
 npm install
 npm run dev
 ```
 
-Frontend chạy tại:
+Frontend chạy tại `http://localhost:3002`; Laravel API mặc định tại `http://127.0.0.1:8002/api`.
 
-```text
-http://localhost:3000
-```
-
-Backend Laravel mặc định:
-
-```text
-http://127.0.0.1:8000/api
-```
-
-Nếu cần đổi backend URL cho Next proxy, đặt trong `.env.local`:
+Các biến môi trường chính:
 
 ```env
-LARAVEL_API_URL=http://127.0.0.1:8000/api
-NEXT_PUBLIC_API_URL=http://127.0.0.1:8000/api
+LARAVEL_API_URL=http://127.0.0.1:8002/api
+NEXT_PUBLIC_API_URL=http://127.0.0.1:8002/api
+NEXT_PUBLIC_SITE_URL=http://localhost:3002
+```
+
+## Kiểm tra chất lượng
+
+```bash
+npm run lint
+npm run typecheck
+npm run build
+npm run test:e2e
 ```

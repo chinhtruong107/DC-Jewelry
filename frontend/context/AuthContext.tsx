@@ -1,6 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect } from "react";
+import { readStoredValue, removeStoredValue, STORAGE_KEYS } from "@/lib/storageKeys";
 
 export interface User {
   id?: number;
@@ -35,8 +36,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Initialize from local storage on mount (simulating persisted session)
   useEffect(() => {
-    const storedUser = localStorage.getItem("bloom_auth_user");
-    const storedToken = localStorage.getItem("bloom_auth_token");
+    const storedUser = readStoredValue(STORAGE_KEYS.authUser);
+    const storedToken = readStoredValue(STORAGE_KEYS.authToken);
 
     if (storedUser) {
       try {
@@ -60,11 +61,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       avatar: userData.avatar || `https://api.dicebear.com/7.x/notionists/svg?seed=${encodeURIComponent(userData.name)}`
     };
     setUser(userWithAvatar);
-    localStorage.setItem("bloom_auth_user", JSON.stringify(userWithAvatar));
+    localStorage.setItem(STORAGE_KEYS.authUser, JSON.stringify(userWithAvatar));
 
     if (authToken) {
       setToken(authToken);
-      localStorage.setItem("bloom_auth_token", authToken);
+      localStorage.setItem(STORAGE_KEYS.authToken, authToken);
     }
 
     setIsAuthReady(true);
@@ -73,8 +74,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = () => {
     setUser(null);
     setToken(null);
-    localStorage.removeItem("bloom_auth_user");
-    localStorage.removeItem("bloom_auth_token");
+    removeStoredValue(STORAGE_KEYS.authUser);
+    removeStoredValue(STORAGE_KEYS.authToken);
     setIsAuthReady(true);
   };
 
@@ -82,7 +83,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser((prev) => {
       if (!prev) return prev;
       const updatedUser = { ...prev, ...data };
-      localStorage.setItem("bloom_auth_user", JSON.stringify(updatedUser));
+      localStorage.setItem(STORAGE_KEYS.authUser, JSON.stringify(updatedUser));
       return updatedUser;
     });
   };

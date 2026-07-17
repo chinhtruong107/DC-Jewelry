@@ -13,7 +13,7 @@ class ResendEmailServiceTest extends TestCase
     public function test_it_sends_temporary_password_email_through_resend(): void
     {
         Config::set('services.resend.key', 're_test_key');
-        Config::set('services.resend.from', 'VANHPERFUME <hello@example.com>');
+        Config::set('services.resend.from', 'Duc Chinh Jewelry <hello@example.com>');
 
         Http::fake([
             'api.resend.com/emails' => Http::response(['id' => 'email_123'], 200),
@@ -30,9 +30,9 @@ class ResendEmailServiceTest extends TestCase
 
             return $request->url() === 'https://api.resend.com/emails'
                 && $request->hasHeader('Authorization', 'Bearer re_test_key')
-                && $payload['from'] === 'VANHPERFUME <hello@example.com>'
+                && $payload['from'] === 'Duc Chinh Jewelry <hello@example.com>'
                 && $payload['to'] === ['customer@example.com']
-                && $payload['subject'] === 'Mật khẩu mới cho tài khoản VANHPERFUME'
+                && $payload['subject'] === 'Mật khẩu mới cho tài khoản Đức Chính Jewelry'
                 && str_contains($payload['text'], 'TempPass123');
         });
     }
@@ -40,7 +40,7 @@ class ResendEmailServiceTest extends TestCase
     public function test_it_throws_resend_error_message_when_request_fails(): void
     {
         Config::set('services.resend.key', 're_test_key');
-        Config::set('services.resend.from', 'VANHPERFUME <hello@example.com>');
+        Config::set('services.resend.from', 'Duc Chinh Jewelry <hello@example.com>');
 
         Http::fake([
             'api.resend.com/emails' => Http::response(['message' => 'Domain is not verified.'], 403),

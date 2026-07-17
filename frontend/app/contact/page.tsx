@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import type React from "react";
 import {
   CheckCircle,
+  AlertCircle,
   Clock,
   Headphones,
   Mail,
@@ -26,6 +27,8 @@ export default function Contact() {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [submitMessage, setSubmitMessage] = useState("");
+  const [submitError, setSubmitError] = useState("");
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -37,16 +40,35 @@ export default function Contact() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
+    setSubmitError("");
+    setSubmitMessage("");
 
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    try {
+      const response = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+      const data = await response.json();
 
-    setIsSubmitting(false);
-    setIsSubmitted(true);
+      if (!response.ok) {
+        const validationMessage = data.errors
+          ? Object.values(data.errors).flat().join(" ")
+          : data.message;
+        throw new Error(validationMessage || "Chưa thể gửi tin nhắn.");
+      }
 
-    setTimeout(() => {
-      setIsSubmitted(false);
+      setIsSubmitted(true);
+      setSubmitMessage(
+        `${data.message}${data.reference ? ` Mã yêu cầu: ${data.reference}.` : ""}`,
+      );
       setFormData({ name: "", email: "", subject: "", message: "" });
-    }, 3000);
+    } catch (error) {
+      setIsSubmitted(false);
+      setSubmitError(error instanceof Error ? error.message : "Chưa thể gửi tin nhắn. Vui lòng thử lại.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const contactInfo = [
@@ -227,6 +249,20 @@ export default function Contact() {
                   </>
                 )}
               </Button>
+
+              {submitMessage && (
+                <div role="status" className="flex items-start gap-3 border border-emerald-400/30 bg-emerald-950/28 p-4 text-sm leading-6 text-emerald-100">
+                  <CheckCircle className="mt-0.5 h-5 w-5 shrink-0 text-emerald-300" />
+                  <p>{submitMessage}</p>
+                </div>
+              )}
+
+              {submitError && (
+                <div role="alert" className="flex items-start gap-3 border border-red-400/30 bg-red-950/28 p-4 text-sm leading-6 text-red-100">
+                  <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-red-300" />
+                  <p>{submitError}</p>
+                </div>
+              )}
             </form>
           </div>
 

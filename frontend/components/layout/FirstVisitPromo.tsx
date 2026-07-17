@@ -3,15 +3,16 @@
 import { X } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useState } from "react";
+import { readStoredValue, STORAGE_KEYS } from "@/lib/storageKeys";
 
-const PROMO_SEEN_KEY = "bloom_first_visit_promo_seen";
+const PROMO_SEEN_KEY = STORAGE_KEYS.firstVisitPromoSeen;
 const PROMO_IMAGE_SRC = "/images/b6755c68-8537-4e08-9695-54355278ea59.jpg";
 
 export default function FirstVisitPromo() {
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
-    const hasSeenPromo = localStorage.getItem(PROMO_SEEN_KEY);
+    const hasSeenPromo = readStoredValue(PROMO_SEEN_KEY);
 
     if (!hasSeenPromo) {
       setIsVisible(true);
@@ -64,7 +65,7 @@ export default function FirstVisitPromo() {
         <div className="relative aspect-[1024/536] w-full">
           <Image
             src={PROMO_IMAGE_SRC}
-            alt="Khuyen mai Bloom mua trong tang gong, combo doi mau 450k"
+            alt="Ưu đãi trang sức dành cho khách hàng mới của Đức Chính Jewelry"
             fill
             priority
             sizes="(max-width: 768px) 94vw, 768px"

@@ -58,7 +58,13 @@
       "contentDispositionType": "attachment",
       "localPatterns": [
         {
-          "pathname": "**",
+          "pathname": "/api/product-images/**"
+        },
+        {
+          "pathname": "/images/**"
+        },
+        {
+          "pathname": "/_next/static/media/**",
           "search": ""
         }
       ],

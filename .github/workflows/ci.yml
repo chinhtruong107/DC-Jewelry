@@ -53,7 +53,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
+          cache: npm
           cache-dependency-path: frontend/package-lock.json
 
       - name: Cài đặt dependencies
@@ -75,19 +75,15 @@ jobs:
       - name: Configure SSH
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.CONTROL_NODE_SSH_KEY }}" > ~/.ssh/control.pem
+          printf '%s\n' "${{ secrets.CONTROL_NODE_SSH_KEY }}" > ~/.ssh/control.pem
           chmod 600 ~/.ssh/control.pem
-
-          ssh-keyscan -H ${{ secrets.CONTROL_NODE_HOST }} >> ~/.ssh/known_hosts
+          ssh-keyscan -H "${{ secrets.CONTROL_NODE_HOST }}" >> ~/.ssh/known_hosts
 
       - name: Deploy via Ansible Control Node
         run: |
           ssh -i ~/.ssh/control.pem \
-            ${{ secrets.CONTROL_NODE_USER }}@${{ secrets.CONTROL_NODE_HOST }} \
-            "cd /home/ubuntu/ansible-jewelry && \
-             git pull origin main && \
-             chmod +x scripts/deploy.sh && \
-             ./scripts/deploy.sh"
+            "${{ secrets.CONTROL_NODE_USER }}@${{ secrets.CONTROL_NODE_HOST }}" \
+            "cd /home/ubuntu/ansible-jewelry && git pull origin main && chmod +x scripts/deploy.sh && ./scripts/deploy.sh"
 
   notify:
     name: Notify Telegram
@@ -106,17 +102,20 @@ jobs:
             STATUS="❌ CI/CD THẤT BẠI"
           fi
 
-          MESSAGE="$STATUS%0A%0A\
-Repo: ${{ github.repository }}%0A\
-Branch: ${{ github.ref_name }}%0A\
-Backend: ${{ needs.backend.result }}%0A\
-Frontend: ${{ needs.frontend.result }}%0A\
-Deploy: ${{ needs.deploy.result }}%0A%0A\
-Log: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          MESSAGE="${STATUS}
 
-          RESPONSE=$(curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
-            -d chat_id="${{ secrets.TELEGRAM_CHAT_ID }}" \
-            -d text="$MESSAGE")
+          Repo: ${{ github.repository }}
+          Branch: ${{ github.ref_name }}
+          Backend: ${{ needs.backend.result }}
+          Frontend: ${{ needs.frontend.result }}
+          Deploy: ${{ needs.deploy.result }}
+
+          Log: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+
+          RESPONSE=$(curl -s -X POST \
+            "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
+            --data-urlencode "chat_id=${{ secrets.TELEGRAM_CHAT_ID }}" \
+            --data-urlencode "text=${MESSAGE}")
 
           echo "Telegram response:"
           echo "$RESPONSE"

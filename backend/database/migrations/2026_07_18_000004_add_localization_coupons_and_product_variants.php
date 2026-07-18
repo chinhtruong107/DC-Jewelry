@@ -84,12 +84,6 @@ return new class extends Migration
 
     private function upgradeCartItemsTable(): void
     {
-        if (Schema::hasIndex('cart_items', ['cart_id', 'product_id'], 'unique')) {
-            Schema::table('cart_items', function (Blueprint $table) {
-                $table->dropUnique('cart_items_cart_id_product_id_unique');
-            });
-        }
-
         if (! Schema::hasColumn('cart_items', 'product_variant_id')) {
             Schema::table('cart_items', function (Blueprint $table) {
                 $table->foreignId('product_variant_id')
@@ -109,6 +103,12 @@ return new class extends Migration
         if (! Schema::hasIndex('cart_items', ['cart_id', 'product_id', 'variant_key'], 'unique')) {
             Schema::table('cart_items', function (Blueprint $table) {
                 $table->unique(['cart_id', 'product_id', 'variant_key'], 'cart_items_cart_product_variant_unique');
+            });
+        }
+
+        if (Schema::hasIndex('cart_items', ['cart_id', 'product_id'], 'unique')) {
+            Schema::table('cart_items', function (Blueprint $table) {
+                $table->dropUnique('cart_items_cart_id_product_id_unique');
             });
         }
     }

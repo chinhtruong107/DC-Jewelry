@@ -115,7 +115,7 @@ export default function ProductsView({
         <button
           type="button"
           onClick={openCreateProduct}
-          className="inline-flex h-10 w-fit items-center justify-center gap-2 rounded-md bg-orange-500 px-4 text-sm font-semibold text-white transition hover:bg-orange-600"
+          className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-md bg-orange-500 px-4 text-sm font-semibold text-white transition hover:bg-orange-600 sm:w-fit"
         >
           <Plus className="h-4 w-4" />
           Thêm sản phẩm
@@ -202,7 +202,7 @@ export default function ProductsView({
         )}
       </div>
 
-      <div className="flex gap-2 overflow-x-auto rounded-lg border border-orange-100 bg-white p-2 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+      <div className="admin-scroll-strip flex snap-x gap-2 overflow-x-auto rounded-lg border border-orange-100 bg-white p-2 shadow-sm dark:border-slate-700 dark:bg-slate-900">
         {[
           { id: "all", label: "Tất cả", count: productsWithStats.length },
           { id: "bestSeller", label: "Đang bán chạy", count: bestSellerProducts.length },
@@ -214,7 +214,7 @@ export default function ProductsView({
             key={item.id}
             type="button"
             onClick={() => setProductView(item.id as typeof productView)}
-            className={`shrink-0 rounded-md px-3 py-2 text-sm font-semibold transition ${
+            className={`shrink-0 snap-start rounded-md px-3 py-2 text-sm font-semibold transition ${
               productView === item.id
                 ? "bg-orange-500 text-white"
                 : "text-slate-600 hover:bg-orange-50 hover:text-orange-700 dark:text-slate-300 dark:hover:bg-slate-800"
@@ -383,7 +383,7 @@ export default function ProductsView({
               </div>
             </div>
 
-            <div className="sticky bottom-0 -mx-5 -mb-5 flex flex-wrap justify-end gap-2 border-t border-orange-100 bg-white/95 px-5 py-3 backdrop-blur dark:border-slate-700 dark:bg-slate-900/95">
+            <div className="sticky bottom-0 -mx-4 -mb-4 grid grid-cols-2 gap-2 border-t border-orange-100 bg-white/95 px-4 py-3 backdrop-blur dark:border-slate-700 dark:bg-slate-900/95 sm:-mx-5 sm:-mb-5 sm:flex sm:justify-end sm:px-5">
               <button
                 type="button"
                 onClick={closeProductForm}
@@ -417,7 +417,7 @@ export default function ProductsView({
                 </p>
               </div>
             </div>
-            <div className="flex flex-wrap justify-end gap-2">
+            <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:justify-end">
               <button
                 type="button"
                 onClick={onCloseDeleteProduct}

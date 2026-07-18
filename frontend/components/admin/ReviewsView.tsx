@@ -24,7 +24,7 @@ export default function ReviewsView({ reviews }: { reviews: AdminReview[] }) {
           <h2 className="text-xl font-semibold text-slate-950 dark:text-white">Đánh giá sản phẩm</h2>
           <p className="text-sm text-slate-500 dark:text-slate-400">Dữ liệu đánh giá thật từ khách hàng đã mua và nhận hàng.</p>
         </div>
-        <div className="rounded-lg border border-orange-100 bg-white px-4 py-3 text-sm shadow-sm dark:border-slate-700 dark:bg-slate-900">
+        <div className="w-full rounded-lg border border-orange-100 bg-white px-4 py-3 text-sm shadow-sm dark:border-slate-700 dark:bg-slate-900 xl:w-auto">
           <span className="font-semibold text-slate-950 dark:text-white">{reviews.length}</span>
           <span className="text-slate-500 dark:text-slate-400"> đánh giá</span>
           <span className="mx-2 text-slate-300">|</span>
@@ -34,11 +34,11 @@ export default function ReviewsView({ reviews }: { reviews: AdminReview[] }) {
         </div>
       </div>
 
-      <div className="flex gap-2 overflow-x-auto rounded-lg border border-orange-100 bg-white p-2 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+      <div className="admin-scroll-strip flex snap-x gap-2 overflow-x-auto rounded-lg border border-orange-100 bg-white p-2 shadow-sm dark:border-slate-700 dark:bg-slate-900">
         <button
           type="button"
           onClick={() => setRatingFilter("all")}
-          className={`shrink-0 rounded-md px-3 py-2 text-sm font-semibold transition ${
+          className={`shrink-0 snap-start rounded-md px-3 py-2 text-sm font-semibold transition ${
             ratingFilter === "all"
               ? "bg-orange-500 text-white"
               : "text-slate-600 hover:bg-orange-50 hover:text-orange-700 dark:text-slate-300 dark:hover:bg-slate-800"
@@ -51,7 +51,7 @@ export default function ReviewsView({ reviews }: { reviews: AdminReview[] }) {
             key={rating}
             type="button"
             onClick={() => setRatingFilter(rating)}
-            className={`flex shrink-0 items-center gap-1 rounded-md px-3 py-2 text-sm font-semibold transition ${
+            className={`flex shrink-0 snap-start items-center gap-1 rounded-md px-3 py-2 text-sm font-semibold transition ${
               ratingFilter === rating
                 ? "bg-orange-500 text-white"
                 : "text-slate-600 hover:bg-orange-50 hover:text-orange-700 dark:text-slate-300 dark:hover:bg-slate-800"
@@ -64,7 +64,7 @@ export default function ReviewsView({ reviews }: { reviews: AdminReview[] }) {
         ))}
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {filteredReviews.map((review) => (
           <SectionCard key={review.id} className="p-4">
             <div className="flex items-start justify-between gap-3">

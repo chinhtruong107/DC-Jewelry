@@ -94,7 +94,7 @@ export default function CustomersView({ users, orders }: { users: AdminUser[]; o
 
       <div className="flex flex-col gap-3 rounded-lg border border-orange-100 bg-white p-3 shadow-sm dark:border-slate-700 dark:bg-slate-900 sm:flex-row sm:items-center sm:justify-between">
         <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">Sắp xếp danh sách khách hàng</span>
-        <div className="flex flex-wrap gap-2">
+        <div className="grid gap-2 sm:flex sm:flex-wrap">
           {[
             { id: "orders", label: "Mua nhiều nhất" },
             { id: "spent", label: "Chi tiêu cao nhất" },
@@ -104,7 +104,7 @@ export default function CustomersView({ users, orders }: { users: AdminUser[]; o
               key={option.id}
               type="button"
               onClick={() => setCustomerSort(option.id as typeof customerSort)}
-              className={`rounded-md px-3 py-2 text-sm font-semibold transition ${
+              className={`w-full rounded-md px-3 py-2 text-sm font-semibold transition sm:w-auto ${
                 customerSort === option.id
                   ? "bg-orange-500 text-white"
                   : "text-slate-600 hover:bg-orange-50 hover:text-orange-700 dark:text-slate-300 dark:hover:bg-slate-800"
@@ -146,7 +146,7 @@ export default function CustomersView({ users, orders }: { users: AdminUser[]; o
                   <button
                     type="button"
                     onClick={() => setSelectedUser(user)}
-                    className="mt-4 inline-flex h-9 items-center gap-2 rounded-md border border-orange-100 px-3 text-sm font-semibold text-orange-700 transition hover:bg-orange-50 dark:border-orange-500/20 dark:text-orange-200 dark:hover:bg-orange-500/10"
+                    className="mt-4 inline-flex h-9 w-full items-center justify-center gap-2 rounded-md border border-orange-100 px-3 text-sm font-semibold text-orange-700 transition hover:bg-orange-50 dark:border-orange-500/20 dark:text-orange-200 dark:hover:bg-orange-500/10 sm:w-auto"
                   >
                     <Eye className="h-4 w-4" />
                     Xem chi tiết
@@ -225,11 +225,11 @@ export default function CustomersView({ users, orders }: { users: AdminUser[]; o
                       {(order.items || []).map((item) => (
                         <div
                           key={item.id}
-                          className="grid grid-cols-[minmax(0,1fr)_72px_120px] gap-3 border-b border-slate-100 px-3 py-2 text-sm last:border-b-0 dark:border-slate-700"
+                          className="grid grid-cols-[minmax(0,1fr)_48px] gap-2 border-b border-slate-100 px-3 py-2 text-sm last:border-b-0 dark:border-slate-700 sm:grid-cols-[minmax(0,1fr)_72px_120px] sm:gap-3"
                         >
                           <span className="min-w-0 truncate text-slate-700 dark:text-slate-200">{item.product_name}</span>
                           <span className="text-center text-slate-500 dark:text-slate-400">x{item.quantity}</span>
-                          <span className="text-right font-semibold text-slate-900 dark:text-white">{formatVND(item.line_total)}</span>
+                          <span className="col-span-2 text-right font-semibold text-slate-900 dark:text-white sm:col-span-1">{formatVND(item.line_total)}</span>
                         </div>
                       ))}
                       {(!order.items || order.items.length === 0) && (

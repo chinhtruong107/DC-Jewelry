@@ -136,7 +136,7 @@ export default function OrdersView({
         <p className="text-sm text-slate-500 dark:text-slate-400">Cập nhật trạng thái để khách hàng theo dõi và đánh giá khi đã nhận hàng.</p>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
         {statusFilters.map((item) => (
           <button
             key={item.id}
@@ -155,8 +155,8 @@ export default function OrdersView({
       </div>
 
       <SectionCard className="p-4">
-        <div className="grid gap-3 lg:grid-cols-[minmax(220px,1fr)_190px_180px_180px_auto] lg:items-end">
-          <label className="text-sm font-medium text-slate-700 dark:text-slate-200">
+        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-[minmax(220px,1fr)_190px_180px_180px_auto] xl:items-end">
+          <label className="text-sm font-medium text-slate-700 dark:text-slate-200 md:col-span-2 xl:col-span-1">
             Tìm đơn hàng
             <div className="mt-1.5 flex h-10 items-center gap-2 rounded-md border border-orange-100 bg-orange-50/60 px-3 dark:border-slate-700 dark:bg-slate-950">
               <Search className="h-4 w-4 text-orange-500" />
@@ -209,7 +209,7 @@ export default function OrdersView({
           <button
             type="button"
             onClick={clearOrderFilters}
-            className="h-10 rounded-md border border-slate-200 px-4 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
+            className="h-10 w-full rounded-md border border-slate-200 px-4 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800 md:col-span-2 xl:col-span-1 xl:w-auto"
           >
             Xóa lọc
           </button>
@@ -302,27 +302,27 @@ export default function OrdersView({
                 <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{formatDateTime(order.created_at)}</p>
               </div>
             </div>
-            <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-orange-100 pt-4 dark:border-slate-700">
+            <div className="mt-4 flex flex-col items-stretch justify-between gap-3 border-t border-orange-100 pt-4 dark:border-slate-700 sm:flex-row sm:items-center">
               <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
                 Thanh toán: {order.payment_method?.toUpperCase()} - {order.payment_status}
               </span>
               {order.status === "processing" && !order.tracking_number ? (
-                <div className="flex flex-wrap gap-2">
+                <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
                   <select
                     value={carriers[order.id] || "ghn"}
                     onChange={(event) => setCarriers((current) => ({ ...current, [order.id]: event.target.value as "ghn" | "ghtk" }))}
-                    className="h-9 rounded-md border border-sky-200 bg-white px-2 text-xs font-semibold text-sky-700 outline-none dark:border-sky-500/30 dark:bg-slate-950 dark:text-sky-200"
+                    className="h-9 w-full rounded-md border border-sky-200 bg-white px-2 text-xs font-semibold text-sky-700 outline-none dark:border-sky-500/30 dark:bg-slate-950 dark:text-sky-200 sm:w-auto"
                     aria-label={`Đơn vị vận chuyển cho ${order.order_number}`}
                   >
                     <option value="ghn">GHN demo</option>
                     <option value="ghtk">GHTK demo</option>
                   </select>
-                  <button type="button" onClick={() => onCreateShipment(order.id, carriers[order.id] || "ghn")} disabled={creatingShipmentOrderId === order.id} className="h-9 rounded-md bg-sky-600 px-3 text-xs font-semibold text-white transition hover:bg-sky-700 disabled:opacity-50">
+                  <button type="button" onClick={() => onCreateShipment(order.id, carriers[order.id] || "ghn")} disabled={creatingShipmentOrderId === order.id} className="h-9 w-full rounded-md bg-sky-600 px-3 text-xs font-semibold text-white transition hover:bg-sky-700 disabled:opacity-50 sm:w-auto">
                     {creatingShipmentOrderId === order.id ? "Đang tạo vận đơn..." : "Tạo vận đơn & giao hàng"}
                   </button>
                 </div>
               ) : nextAction ? (
-                <div className="flex flex-wrap gap-2">
+                <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:flex-wrap">
                   <button
                     type="button"
                     onClick={() => onUpdateOrderStatus(order.id, "cancelled")}

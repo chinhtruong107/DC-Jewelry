@@ -4,7 +4,7 @@ import { formatVND } from "@/lib/utils";
 import { fetchProvinces, type ProvinceOption } from "@/lib/locations";
 import { readStoredValue, removeStoredValue } from "@/lib/storageKeys";
 import { useEffect, useMemo, useState } from "react";
-import { Bell, CircleDollarSign, LogOut, PackageCheck, PanelLeft, Search, ShieldCheck, Star, Users, WalletCards } from "lucide-react";
+import { CircleDollarSign, LogOut, PackageCheck, PanelLeft, Search, ShieldCheck, Star, Users, WalletCards } from "lucide-react";
 
 import OverviewView from "@/components/admin/OverviewView";
 import ProductsView from "@/components/admin/ProductsView";
@@ -30,6 +30,7 @@ export default function AdminPage() {
   const [creatingShipmentOrderId, setCreatingShipmentOrderId] = useState<number | null>(null);
   const [updatingReturnId, setUpdatingReturnId] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [isMobileNavigationOpen, setIsMobileNavigationOpen] = useState(false);
   const [revenueMode, setRevenueMode] = useState<RevenueMode>("day");
   const [revenueStartDate, setRevenueStartDate] = useState(() => {
     const date = new Date();
@@ -660,7 +661,7 @@ export default function AdminPage() {
   return (
       <div className="dc-admin-redesign min-h-screen bg-[#f5f0e7] text-[#28171a]">
       <div className="flex min-h-screen">
-        <aside className="hidden w-72 shrink-0 border-r border-[#d6bd7a]/18 bg-[#070607] px-5 py-6 text-[#f7efe1] lg:flex lg:flex-col">
+        <aside className="hidden w-72 shrink-0 border-r border-[#d6bd7a]/18 bg-[#070607] px-5 py-6 text-[#f7efe1] lg:sticky lg:top-0 lg:flex lg:h-dvh lg:self-start lg:flex-col lg:overflow-y-auto">
           <div className="flex items-center gap-3">
             <div className="flex h-11 w-11 items-center justify-center bg-[#d6bd7a] text-black">
               <ShieldCheck className="h-6 w-6" />
@@ -695,7 +696,7 @@ export default function AdminPage() {
             })}
           </nav>
 
-          <div className="fixed bottom-6 left-5 z-40 w-[15.5rem] border border-[#d6bd7a]/18 bg-[#0d0b0a] p-4 shadow-[0_24px_80px_rgba(0,0,0,0.28)]">
+          <div className="mt-auto border border-[#d6bd7a]/18 bg-[#0d0b0a] p-4 shadow-[0_24px_80px_rgba(0,0,0,0.28)]">
             <div className="flex items-center gap-2 text-sm font-semibold text-[#d6bd7a]">
               <Star className="h-4 w-4 fill-[#d6bd7a] text-[#d6bd7a]" />
               Kế hoạch hôm nay
@@ -709,7 +710,14 @@ export default function AdminPage() {
         <div className="min-w-0 flex-1">
           <header className="sticky top-0 z-30 border-b border-[#d6bd7a]/18 bg-[#070607]/94 shadow-[0_18px_55px_rgba(0,0,0,0.42)] backdrop-blur-xl">
             <div className="flex min-h-16 flex-wrap items-center gap-3 px-4 py-3 sm:px-6 lg:px-8">
-              <button className="flex h-10 w-10 items-center justify-center border border-[#d6bd7a]/25 bg-black/35 text-[#f7efe1] lg:hidden">
+              <button
+                type="button"
+                onClick={() => setIsMobileNavigationOpen((current) => !current)}
+                className="flex h-10 w-10 shrink-0 items-center justify-center border border-[#d6bd7a]/25 bg-black/35 text-[#f7efe1] transition hover:border-[#d6bd7a]/55 hover:text-[#d6bd7a] lg:hidden"
+                aria-controls="admin-mobile-navigation"
+                aria-expanded={isMobileNavigationOpen}
+                aria-label={isMobileNavigationOpen ? "Đóng menu quản trị" : "Mở menu quản trị"}
+              >
                 <PanelLeft className="h-5 w-5" />
               </button>
 
@@ -722,19 +730,16 @@ export default function AdminPage() {
                 </h1>
               </div>
 
-              <div className="order-3 flex w-full items-center gap-2 border border-[#d6bd7a]/25 bg-black/30 px-3 py-2 shadow-sm sm:order-none sm:w-80">
+              <div className="order-3 flex h-10 w-full items-center gap-2 border border-[#d6bd7a]/25 bg-black/30 px-3 shadow-sm lg:order-none lg:w-80">
                 <Search className="h-4 w-4 text-[#d6bd7a]" />
                 <input
                   value={searchQuery}
                   onChange={(event) => setSearchQuery(event.target.value)}
                   className="w-full bg-transparent text-sm text-[#f7efe1] outline-none placeholder:text-[#cfc4ad]/50"
                   placeholder="Tìm trong mục hiện tại..."
+                  aria-label="Tìm trong mục quản trị hiện tại"
                 />
               </div>
-
-              <button className="flex h-10 w-10 items-center justify-center border border-[#d6bd7a]/25 bg-black/30 text-[#f7efe1] transition hover:border-[#d6bd7a]/55 hover:text-[#d6bd7a]">
-                <Bell className="h-5 w-5" />
-              </button>
 
               <button
                 type="button"
@@ -749,7 +754,11 @@ export default function AdminPage() {
               </button>
             </div>
 
-            <div className="flex gap-2 overflow-x-auto px-4 pb-3 sm:px-6 lg:hidden">
+            <nav
+              id="admin-mobile-navigation"
+              aria-label="Điều hướng quản trị trên thiết bị di động"
+              className={`${isMobileNavigationOpen ? "grid" : "hidden"} grid-cols-2 gap-2 border-t border-[#d6bd7a]/18 px-4 py-3 sm:grid-cols-4 sm:px-6 lg:hidden`}
+            >
               {navItems.map((item) => {
                 const Icon = item.icon;
                 const isActive = activeTab === item.id;
@@ -757,11 +766,15 @@ export default function AdminPage() {
                   <button
                     key={item.id}
                     type="button"
-                    onClick={() => setActiveTab(item.id)}
-                    className={`flex shrink-0 items-center gap-2 rounded-md px-3 py-2 text-sm font-medium ${
+                    onClick={() => {
+                      setActiveTab(item.id);
+                      setIsMobileNavigationOpen(false);
+                    }}
+                    aria-current={isActive ? "page" : undefined}
+                    className={`flex min-h-11 items-center gap-2 rounded-md px-3 py-2 text-left text-sm font-medium transition ${
                       isActive
                         ? "border border-[#d6bd7a]/45 bg-[#d6bd7a]/12 text-[#d6bd7a]"
-                        : "text-[#cfc4ad]/80"
+                        : "border border-transparent text-[#cfc4ad]/80 hover:border-[#d6bd7a]/25 hover:text-[#d6bd7a]"
                     }`}
                   >
                     <Icon className="h-4 w-4" />
@@ -769,10 +782,10 @@ export default function AdminPage() {
                   </button>
                 );
               })}
-            </div>
+            </nav>
           </header>
 
-          <main className="px-4 py-6 sm:px-6 lg:px-8">
+          <main className="mx-auto w-full max-w-[1600px] px-4 py-5 sm:px-6 sm:py-6 lg:px-8">
             {isLoadingData && (
               <div className="rounded-lg border border-orange-100 bg-white p-5 text-sm text-slate-600 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300">
                 Đang tải dữ liệu từ cơ sở dữ liệu...

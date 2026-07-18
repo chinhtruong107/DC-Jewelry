@@ -465,10 +465,15 @@ export function AdminModal({
   }[size];
 
   return (
-    <div className="admin-modal-overlay fixed inset-0 z-50 flex items-center justify-center bg-zinc-950/70 px-4 py-6 backdrop-blur-sm">
-      <div className={`admin-modal-panel max-h-[90vh] w-full overflow-hidden rounded-lg border border-zinc-200 bg-white shadow-xl dark:border-zinc-800 dark:bg-zinc-950 ${sizeClass}`}>
-        <div className="flex items-start justify-between gap-4 border-b border-zinc-200 bg-zinc-50 px-5 py-4 dark:border-zinc-800 dark:bg-zinc-900">
-          <div>
+    <div className="admin-modal-overlay fixed inset-0 z-50 flex items-end justify-center bg-zinc-950/70 backdrop-blur-sm sm:items-center sm:px-4 sm:py-6">
+      <div
+        className={`admin-modal-panel max-h-[96dvh] w-full overflow-hidden rounded-t-lg border border-x-0 border-b-0 border-zinc-200 bg-white shadow-xl dark:border-zinc-800 dark:bg-zinc-950 sm:max-h-[90vh] sm:rounded-lg sm:border ${sizeClass}`}
+        role="dialog"
+        aria-modal="true"
+        aria-label={title}
+      >
+        <div className="flex items-start justify-between gap-3 border-b border-zinc-200 bg-zinc-50 px-4 py-3.5 dark:border-zinc-800 dark:bg-zinc-900 sm:gap-4 sm:px-5 sm:py-4">
+          <div className="min-w-0">
             <h3 className="text-lg font-semibold text-slate-950 dark:text-white">{title}</h3>
             {description && <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{description}</p>}
           </div>
@@ -481,7 +486,7 @@ export function AdminModal({
             <X className="h-4 w-4" />
           </button>
         </div>
-        <div className="max-h-[calc(90vh-88px)] overflow-y-auto p-5">{children}</div>
+        <div className="max-h-[calc(96dvh-76px)] overflow-y-auto overscroll-contain p-4 sm:max-h-[calc(90vh-88px)] sm:p-5">{children}</div>
       </div>
     </div>
   );

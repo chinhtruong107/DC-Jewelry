@@ -601,6 +601,16 @@ body::before {
   cursor: not-allowed;
 }
 
+.admin-scroll-strip {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-inline: contain;
+  scrollbar-width: none;
+}
+
+.admin-scroll-strip::-webkit-scrollbar {
+  display: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .admin-modal-overlay,
   .admin-modal-panel {

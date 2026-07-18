@@ -100,11 +100,11 @@ export default function OverviewView({
             </div>
 
             <div className="grid gap-3 sm:grid-cols-[auto_1fr_auto] lg:max-w-xl">
-              <div className="inline-flex h-8 w-fit items-center rounded-full border border-slate-300 bg-white p-0.5 shadow-sm dark:border-slate-700 dark:bg-slate-950">
+              <div className="inline-flex h-9 w-full items-center rounded-full border border-slate-300 bg-white p-0.5 shadow-sm dark:border-slate-700 dark:bg-slate-950 sm:w-fit">
                 <button
                   type="button"
                   onClick={() => setRevenueMode("day")}
-                  className={`flex h-7 w-11 items-center justify-center rounded-full transition ${
+                  className={`flex h-8 flex-1 items-center justify-center rounded-full transition sm:w-11 sm:flex-none ${
                     revenueMode === "day" ? "bg-orange-500 text-white" : "text-slate-600 hover:bg-orange-50 dark:text-slate-300 dark:hover:bg-slate-800"
                   }`}
                   aria-label="Xem doanh thu theo ngày"
@@ -116,7 +116,7 @@ export default function OverviewView({
                 <button
                   type="button"
                   onClick={() => setRevenueMode("month")}
-                  className={`flex h-7 w-11 items-center justify-center rounded-full transition ${
+                  className={`flex h-8 flex-1 items-center justify-center rounded-full transition sm:w-11 sm:flex-none ${
                     revenueMode === "month" ? "bg-orange-500 text-white" : "text-slate-600 hover:bg-orange-50 dark:text-slate-300 dark:hover:bg-slate-800"
                   }`}
                   aria-label="Xem doanh thu theo tháng"
@@ -126,7 +126,7 @@ export default function OverviewView({
                 </button>
               </div>
 
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid gap-2 sm:grid-cols-2">
                 <label className="text-xs font-medium text-slate-500 dark:text-slate-400">
                   Từ ngày
                   <input
@@ -169,48 +169,50 @@ export default function OverviewView({
             </p>
           </div>
 
-          <div className="mt-6 grid h-[340px] grid-cols-[52px_minmax(0,1fr)] gap-2">
-            <div className="flex h-[292px] flex-col justify-between text-right text-xs text-slate-700 dark:text-slate-300">
-              {revenueTicks.map((tick, index) => (
-                <span key={`${tick}-${index}`}>{formatCompactVND(tick)}</span>
-              ))}
-            </div>
-            <div className="min-w-0">
-              <div className="relative h-[292px] border-b border-slate-300 dark:border-slate-700">
-                {[0, 1, 2, 3, 4].map((line) => (
-                  <div
-                    key={line}
-                    className="absolute left-0 right-0 border-t border-slate-200 dark:border-slate-800"
-                    style={{ top: `${line * 25}%` }}
-                  />
+          <div className="admin-scroll-strip mt-6 overflow-x-auto pb-1">
+            <div className="grid h-[340px] min-w-[560px] grid-cols-[52px_minmax(0,1fr)] gap-2">
+              <div className="flex h-[292px] flex-col justify-between text-right text-xs text-slate-700 dark:text-slate-300">
+                {revenueTicks.map((tick, index) => (
+                  <span key={`${tick}-${index}`}>{formatCompactVND(tick)}</span>
                 ))}
-                {revenueBars.length > 0 ? (
-                  <div className="absolute inset-0 flex items-end gap-2 px-2 sm:gap-3 sm:px-4">
-                    {revenueBars.map((bar) => (
-                      <div key={bar.label} className="group flex h-full min-w-0 flex-1 items-end justify-center">
-                        <div
-                          className="relative w-full max-w-8 rounded-t-sm bg-orange-300 transition group-hover:bg-orange-500 dark:bg-orange-400"
-                          style={{ height: `${bar.value}%` }}
-                        >
-                          <div className="pointer-events-none absolute bottom-full left-1/2 mb-2 hidden -translate-x-1/2 whitespace-nowrap rounded-md bg-slate-950 px-2 py-1 text-xs font-medium text-white shadow group-hover:block">
-                            {formatVND(bar.total)}
+              </div>
+              <div className="min-w-0">
+                <div className="relative h-[292px] border-b border-slate-300 dark:border-slate-700">
+                  {[0, 1, 2, 3, 4].map((line) => (
+                    <div
+                      key={line}
+                      className="absolute left-0 right-0 border-t border-slate-200 dark:border-slate-800"
+                      style={{ top: `${line * 25}%` }}
+                    />
+                  ))}
+                  {revenueBars.length > 0 ? (
+                    <div className="absolute inset-0 flex items-end gap-2 px-2 sm:gap-3 sm:px-4">
+                      {revenueBars.map((bar) => (
+                        <div key={bar.label} className="group flex h-full min-w-0 flex-1 items-end justify-center">
+                          <div
+                            className="relative w-full max-w-8 rounded-t-sm bg-orange-300 transition group-hover:bg-orange-500 dark:bg-orange-400"
+                            style={{ height: `${bar.value}%` }}
+                          >
+                            <div className="pointer-events-none absolute bottom-full left-1/2 mb-2 hidden -translate-x-1/2 whitespace-nowrap rounded-md bg-slate-950 px-2 py-1 text-xs font-medium text-white shadow group-hover:block">
+                              {formatVND(bar.total)}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="absolute inset-0 flex items-center justify-center px-4 text-center text-sm text-slate-500 dark:text-slate-400">
-                    Chưa có doanh thu trong khoảng ngày đã chọn.
-                  </div>
-                )}
-              </div>
-              <div className="flex gap-2 px-2 pt-3 sm:px-4">
-                {revenueBars.map((bar) => (
-                  <div key={bar.label} className="min-w-0 flex-1 truncate text-center text-xs text-slate-700 dark:text-slate-300">
-                    {bar.label}
-                  </div>
-                ))}
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="absolute inset-0 flex items-center justify-center px-4 text-center text-sm text-slate-500 dark:text-slate-400">
+                      Chưa có doanh thu trong khoảng ngày đã chọn.
+                    </div>
+                  )}
+                </div>
+                <div className="flex gap-2 px-2 pt-3 sm:px-4">
+                  {revenueBars.map((bar) => (
+                    <div key={bar.label} className="min-w-0 flex-1 truncate text-center text-xs text-slate-700 dark:text-slate-300">
+                      {bar.label}
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           </div>

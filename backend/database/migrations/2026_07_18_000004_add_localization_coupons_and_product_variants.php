@@ -9,10 +9,37 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('products', function (Blueprint $table) {
-            $table->string('name_en')->nullable()->after('name');
-            $table->text('description_en')->nullable()->after('description');
-        });
+        $this->addProductLocalizationColumns();
+        $this->createProductVariantsTable();
+        $this->createCouponsTable();
+        $this->upgradeCartItemsTable();
+        $this->upgradeOrdersTable();
+        $this->upgradeOrderItemsTable();
+
+        DB::table('orders')->update(['member_discount' => DB::raw('discount')]);
+        $this->backfillProductTranslations();
+    }
+
+    private function addProductLocalizationColumns(): void
+    {
+        if (! Schema::hasColumn('products', 'name_en')) {
+            Schema::table('products', function (Blueprint $table) {
+                $table->string('name_en')->nullable()->after('name');
+            });
+        }
+
+        if (! Schema::hasColumn('products', 'description_en')) {
+            Schema::table('products', function (Blueprint $table) {
+                $table->text('description_en')->nullable()->after('description');
+            });
+        }
+    }
+
+    private function createProductVariantsTable(): void
+    {
+        if (Schema::hasTable('product_variants')) {
+            return;
+        }
 
         Schema::create('product_variants', function (Blueprint $table) {
             $table->id();
@@ -28,6 +55,13 @@ return new class extends Migration
             $table->timestamps();
             $table->index(['product_id', 'is_active', 'sort_order']);
         });
+    }
+
+    private function createCouponsTable(): void
+    {
+        if (Schema::hasTable('coupons')) {
+            return;
+        }
 
         Schema::create('coupons', function (Blueprint $table) {
             $table->id();
@@ -46,32 +80,107 @@ return new class extends Migration
             $table->timestamps();
             $table->index(['is_active', 'starts_at', 'expires_at']);
         });
+    }
 
-        Schema::table('cart_items', function (Blueprint $table) {
-            $table->dropUnique('cart_items_cart_id_product_id_unique');
-            $table->foreignId('product_variant_id')->nullable()->after('product_id')->constrained('product_variants')->nullOnDelete();
-            $table->string('variant_key', 64)->default('base')->after('product_variant_id');
-            $table->unique(['cart_id', 'product_id', 'variant_key'], 'cart_items_cart_product_variant_unique');
-        });
+    private function upgradeCartItemsTable(): void
+    {
+        if (Schema::hasIndex('cart_items', ['cart_id', 'product_id'], 'unique')) {
+            Schema::table('cart_items', function (Blueprint $table) {
+                $table->dropUnique('cart_items_cart_id_product_id_unique');
+            });
+        }
 
-        Schema::table('orders', function (Blueprint $table) {
-            $table->foreignId('coupon_id')->nullable()->after('user_id')->constrained('coupons')->nullOnDelete();
-            $table->string('coupon_code', 50)->nullable()->after('coupon_id');
-            $table->unsignedBigInteger('member_discount')->default(0)->after('discount');
-            $table->unsignedBigInteger('coupon_discount')->default(0)->after('member_discount');
-            $table->timestamp('coupon_usage_released_at')->nullable()->after('coupon_discount');
-        });
+        if (! Schema::hasColumn('cart_items', 'product_variant_id')) {
+            Schema::table('cart_items', function (Blueprint $table) {
+                $table->foreignId('product_variant_id')
+                    ->nullable()
+                    ->after('product_id')
+                    ->constrained('product_variants')
+                    ->nullOnDelete();
+            });
+        }
 
-        Schema::table('order_items', function (Blueprint $table) {
-            $table->foreignId('product_variant_id')->nullable()->after('product_id')->constrained('product_variants')->nullOnDelete();
-            $table->string('product_name_en')->nullable()->after('product_name');
-            $table->string('variant_sku')->nullable()->after('product_name_en');
-            $table->string('variant_label')->nullable()->after('variant_sku');
-            $table->json('variant_options')->nullable()->after('variant_label');
-        });
+        if (! Schema::hasColumn('cart_items', 'variant_key')) {
+            Schema::table('cart_items', function (Blueprint $table) {
+                $table->string('variant_key', 64)->default('base')->after('product_variant_id');
+            });
+        }
 
-        DB::table('orders')->update(['member_discount' => DB::raw('discount')]);
-        $this->backfillProductTranslations();
+        if (! Schema::hasIndex('cart_items', ['cart_id', 'product_id', 'variant_key'], 'unique')) {
+            Schema::table('cart_items', function (Blueprint $table) {
+                $table->unique(['cart_id', 'product_id', 'variant_key'], 'cart_items_cart_product_variant_unique');
+            });
+        }
+    }
+
+    private function upgradeOrdersTable(): void
+    {
+        if (! Schema::hasColumn('orders', 'coupon_id')) {
+            Schema::table('orders', function (Blueprint $table) {
+                $table->foreignId('coupon_id')->nullable()->after('user_id')->constrained('coupons')->nullOnDelete();
+            });
+        }
+
+        if (! Schema::hasColumn('orders', 'coupon_code')) {
+            Schema::table('orders', function (Blueprint $table) {
+                $table->string('coupon_code', 50)->nullable()->after('coupon_id');
+            });
+        }
+
+        if (! Schema::hasColumn('orders', 'member_discount')) {
+            Schema::table('orders', function (Blueprint $table) {
+                $table->unsignedBigInteger('member_discount')->default(0)->after('discount');
+            });
+        }
+
+        if (! Schema::hasColumn('orders', 'coupon_discount')) {
+            Schema::table('orders', function (Blueprint $table) {
+                $table->unsignedBigInteger('coupon_discount')->default(0)->after('member_discount');
+            });
+        }
+
+        if (! Schema::hasColumn('orders', 'coupon_usage_released_at')) {
+            Schema::table('orders', function (Blueprint $table) {
+                $table->timestamp('coupon_usage_released_at')->nullable()->after('coupon_discount');
+            });
+        }
+    }
+
+    private function upgradeOrderItemsTable(): void
+    {
+        if (! Schema::hasColumn('order_items', 'product_variant_id')) {
+            Schema::table('order_items', function (Blueprint $table) {
+                $table->foreignId('product_variant_id')
+                    ->nullable()
+                    ->after('product_id')
+                    ->constrained('product_variants')
+                    ->nullOnDelete();
+            });
+        }
+
+        if (! Schema::hasColumn('order_items', 'product_name_en')) {
+            Schema::table('order_items', function (Blueprint $table) {
+                $table->string('product_name_en')->nullable()->after('product_name');
+            });
+        }
+
+        if (! Schema::hasColumn('order_items', 'variant_sku')) {
+            Schema::table('order_items', function (Blueprint $table) {
+                $table->string('variant_sku')->nullable()->after('product_name_en');
+            });
+        }
+
+        if (! Schema::hasColumn('order_items', 'variant_label')) {
+            Schema::table('order_items', function (Blueprint $table) {
+                $table->string('variant_label')->nullable()->after('variant_sku');
+            });
+        }
+
+        if (! Schema::hasColumn('order_items', 'variant_options')) {
+            Schema::table('order_items', function (Blueprint $table) {
+                $table->json('variant_options')->nullable()->after('variant_label');
+            });
+        }
     }
 
     public function down(): void

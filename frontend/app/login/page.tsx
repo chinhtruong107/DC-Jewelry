@@ -32,6 +32,10 @@ export default function Login() {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+
+    if (errorMessage) {
+      setErrorMessage("");
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -57,7 +61,13 @@ export default function Login() {
         login(data.user, data.token);
         router.push(data.user?.must_change_password ? "/change-password" : "/");
       } else {
-        setErrorMessage(data.message || "Đăng nhập thất bại");
+        const apiMessage = data.errors?.email?.[0] || data.message;
+
+        setErrorMessage(
+          apiMessage === "Email or password is incorrect."
+            ? "Email hoặc mật khẩu không chính xác."
+            : apiMessage || "Đăng nhập thất bại. Vui lòng thử lại.",
+        );
       }
     } catch {
       setErrorMessage("Lỗi kết nối đến máy chủ. Vui lòng thử lại sau.");
@@ -91,9 +101,13 @@ export default function Login() {
 
         <CardContent className="flex-1 px-7 py-7">
           {errorMessage && (
-            <div className="mb-5 flex items-start gap-3 border border-red-400/35 bg-red-500/10 px-4 py-3 text-sm font-medium text-red-100">
-              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-red-300" />
-              <span>{errorMessage}</span>
+            <div
+              role="alert"
+              aria-live="polite"
+              className="mb-5 flex items-start gap-3 border border-[#e1848b]/40 bg-[#4a171d]/55 px-4 py-3.5 text-sm font-medium leading-6 text-[#ffe4e6]"
+            >
+              <AlertCircle className="mt-1 h-4 w-4 shrink-0 text-[#f4a4aa]" />
+              <span className="min-w-0">{errorMessage}</span>
             </div>
           )}
 

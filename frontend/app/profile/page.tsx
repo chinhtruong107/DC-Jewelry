@@ -117,8 +117,10 @@ const panelClass = "border border-[#d6bd7a]/20 bg-[#0b0908] shadow-[0_30px_90px_
 const labelClass = "text-xs font-bold uppercase tracking-[0.18em] text-[#f7efe1]";
 const inputClass =
   "h-12 rounded-none border-[#d6bd7a]/25 bg-black/25 text-[#f7efe1] shadow-none placeholder:text-[#cfc4ad]/45 hover:border-[#d6bd7a]/45 focus-visible:border-[#d6bd7a] focus-visible:ring-[#d6bd7a]/25 disabled:border-[#d6bd7a]/12 disabled:bg-black/15 disabled:text-[#cfc4ad]/65";
-const selectContentClass = "border-[#d6bd7a]/25 bg-[#0b0908] text-[#f7efe1]";
-const selectItemClass = "focus:bg-[#d6bd7a]/15 focus:text-[#f7efe1]";
+const selectContentClass =
+  "rounded-none border-[#28171a]/15 bg-[#fffdf9] p-1 text-[#28171a] shadow-[0_18px_50px_rgba(55,28,33,0.18)]";
+const selectItemClass =
+  "rounded-none px-3 py-2.5 text-[#28171a] focus:bg-[#7a2130] focus:text-[#fffaf2] data-[state=checked]:font-semibold";
 
 function getOrderSubtotal(order: Order) {
   return order.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
@@ -480,27 +482,29 @@ export default function ProfilePage() {
   return (
     <div className="min-h-[calc(100vh-160px)] bg-[#070607] text-[#f7efe1]">
       <div className="mx-auto max-w-[1500px] px-3 py-6 sm:px-5 sm:py-8 lg:px-8 lg:py-10">
-        <section className="relative overflow-hidden border border-[#d6bd7a]/30 bg-[#0b0908] shadow-[0_35px_120px_rgba(0,0,0,0.42)]">
-          <div className="absolute inset-0 bg-[url('/images/duc-chinh-jewelry-hero.png')] bg-cover bg-center opacity-30" />
-          <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(7,6,7,0.98)_0%,rgba(7,6,7,0.85)_48%,rgba(7,6,7,0.62)_100%)]" />
-          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#f7d98f] to-transparent" />
+        <section className="relative overflow-hidden border border-[#e2c273]/30 bg-[#160f11] shadow-[0_35px_120px_rgba(40,23,26,0.22)]">
+          <div className="absolute inset-0 bg-[url('/images/duc-chinh-jewelry-hero.png')] bg-cover bg-center opacity-35" />
+          <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(18,12,14,0.98)_0%,rgba(18,12,14,0.9)_48%,rgba(18,12,14,0.68)_100%)]" />
+          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#f2cf82] to-transparent" />
 
           <div className="relative grid gap-8 px-5 py-8 sm:px-8 lg:grid-cols-[1fr_auto] lg:px-10 lg:py-10">
             <div className="max-w-3xl">
-              <p className="text-xs font-bold uppercase tracking-[0.32em] text-[#d6bd7a]">Member profile</p>
-              <h1 className="mt-4 font-serif text-4xl font-light leading-tight text-[#f7efe1] sm:text-6xl">
+              <p className="text-xs font-bold uppercase tracking-[0.32em] text-[#f2cf82]">Member profile</p>
+              <h1 className="mt-4 font-serif text-4xl font-light leading-tight text-[#fffaf2] sm:text-6xl">
                 Không gian tài khoản
               </h1>
-              <p className="mt-4 max-w-2xl text-sm leading-7 text-[#cfc4ad]/78">
+              <p className="mt-4 max-w-2xl text-sm leading-7 text-[#eadfd2]">
                 Quản lý thông tin giao hàng, theo dõi đơn mua và lưu lại những thiết kế bạn yêu thích.
               </p>
             </div>
 
-            <div className="grid min-w-[260px] grid-cols-3 border border-[#d6bd7a]/18 bg-black/25">
+            <div className="grid min-w-0 grid-cols-3 border border-[#e2c273]/25 bg-[#130f10]/70 backdrop-blur-sm sm:min-w-[300px]">
               {profileStats.map((stat) => (
-                <div key={stat.label} className="border-r border-[#d6bd7a]/12 px-4 py-5 last:border-r-0">
-                  <p className="font-serif text-3xl text-[#d6bd7a]">{stat.value}</p>
-                  <p className="mt-1 text-xs uppercase tracking-[0.18em] text-[#cfc4ad]/70">{stat.label}</p>
+                <div key={stat.label} className="border-r border-[#e2c273]/18 px-3 py-5 last:border-r-0 sm:px-4">
+                  <p className="font-serif text-3xl text-[#f2cf82]">{stat.value}</p>
+                  <p className="mt-1 text-[11px] uppercase tracking-[0.16em] text-[#eadfd2] sm:text-xs sm:tracking-[0.18em]">
+                    {stat.label}
+                  </p>
                 </div>
               ))}
             </div>

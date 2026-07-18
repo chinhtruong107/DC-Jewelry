@@ -31,6 +31,20 @@ class AuthenticationAndAuthorizationTest extends TestCase
         ])->assertOk()->assertJsonStructure(['token']);
     }
 
+    public function test_login_error_is_returned_in_vietnamese(): void
+    {
+        User::factory()->create([
+            'email' => 'customer@example.com',
+            'password' => Hash::make('SecurePass123'),
+        ]);
+
+        $this->postJson('/api/login', [
+            'email' => 'customer@example.com',
+            'password' => 'wrong-password',
+        ])->assertUnprocessable()
+            ->assertJsonPath('errors.email.0', 'Email hoặc mật khẩu không chính xác.');
+    }
+
     public function test_customer_cannot_access_admin_dashboard(): void
     {
         Sanctum::actingAs(User::factory()->create(['role' => 'customer']));

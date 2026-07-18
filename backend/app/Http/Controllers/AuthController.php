@@ -49,14 +49,14 @@ class AuthController extends Controller
 
         if (! $user || ! Hash::check($validated['password'], $user->password)) {
             throw ValidationException::withMessages([
-                'email' => ['Email or password is incorrect.'],
+                'email' => ['Email hoặc mật khẩu không chính xác.'],
             ]);
         }
 
         $token = $user->createToken('api-token')->plainTextToken;
 
         return response()->json([
-            'message' => 'Login success',
+            'message' => 'Đăng nhập thành công.',
             'user' => $user,
             'token' => $token,
         ]);

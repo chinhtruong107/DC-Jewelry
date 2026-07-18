@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Order;
 use App\Models\Product;
+use App\Models\ProductVariant;
+use App\Services\CouponService;
 use App\Services\DemoShippingService;
 use App\Services\ResendEmailService;
 use App\Services\VnpayService;
@@ -28,7 +30,12 @@ class OrderController extends Controller
         return response()->json($orders);
     }
 
-    public function store(Request $request, VnpayService $vnpay, ResendEmailService $email)
+    public function store(
+        Request $request,
+        VnpayService $vnpay,
+        ResendEmailService $email,
+        CouponService $coupons
+    )
     {
         $user = $this->resolveUser($request);
 
@@ -48,7 +55,9 @@ class OrderController extends Controller
             'recipient.ward_code' => ['nullable', 'string', 'exists:wards,code'],
             'items' => ['required', 'array', 'min:1'],
             'items.*.id' => ['required', 'integer', 'exists:products,id'],
+            'items.*.variant_id' => ['nullable', 'integer', 'exists:product_variants,id'],
             'items.*.quantity' => ['required', 'integer', 'min:1'],
+            'coupon_code' => ['nullable', 'string', 'max:50'],
             'payment_method' => ['nullable', 'string', 'in:cod,vnpay'],
             'note' => ['nullable', 'string'],
         ]);
@@ -59,29 +68,56 @@ class OrderController extends Controller
             ], 422);
         }
 
-        $order = DB::transaction(function () use ($user, $validated) {
+        $order = DB::transaction(function () use ($user, $validated, $coupons) {
             $subtotal = 0;
             $items = collect($validated['items'])->map(function ($item) use (&$subtotal) {
                 $product = Product::whereKey($item['id'])->lockForUpdate()->firstOrFail();
                 $quantity = (int) $item['quantity'];
+                $variant = isset($item['variant_id'])
+                    ? ProductVariant::whereKey($item['variant_id'])
+                        ->where('product_id', $product->id)
+                        ->lockForUpdate()
+                        ->first()
+                    : null;
 
-                if (($product->status ?? 'active') !== 'active' || $product->stock < $quantity) {
-                    abort(response()->json([
-                        'message' => "Sản phẩm {$product->name} không đủ hàng. Hiện còn {$product->stock} sản phẩm.",
-                    ], 422));
+                if (isset($item['variant_id']) && (! $variant || ! $variant->is_active)) {
+                    throw ValidationException::withMessages([
+                        'items' => ["Biến thể của sản phẩm {$product->name} không còn khả dụng."],
+                    ]);
                 }
 
-                $lineTotal = $product->price * $quantity;
+                if (! $variant && $product->variants()->where('is_active', true)->exists()) {
+                    throw ValidationException::withMessages([
+                        'items' => ["Vui lòng chọn biến thể cho sản phẩm {$product->name}."],
+                    ]);
+                }
+
+                $availableStock = $variant?->stock ?? $product->stock;
+
+                if (($product->status ?? 'active') !== 'active' || $availableStock < $quantity) {
+                    throw ValidationException::withMessages([
+                        'items' => ["Sản phẩm {$product->name} không đủ hàng. Hiện còn {$availableStock} sản phẩm."],
+                    ]);
+                }
+
+                $price = (int) ($variant?->price ?? $product->price);
+                $lineTotal = $price * $quantity;
                 $subtotal += $lineTotal;
                 $product->decrement('stock', $quantity);
+                $variant?->decrement('stock', $quantity);
                 $warrantyStartsAt = now();
                 $warrantyMonths = max(1, (int) ($product->warranty_months ?? 12));
 
                 return [
                     'product_id' => $product->id,
+                    'product_variant_id' => $variant?->id,
                     'product_name' => $product->name,
+                    'product_name_en' => $product->name_en,
                     'product_image' => $product->image,
-                    'price' => $product->price,
+                    'variant_sku' => $variant?->sku,
+                    'variant_label' => $variant?->label,
+                    'variant_options' => $variant?->options(),
+                    'price' => $price,
                     'quantity' => $quantity,
                     'line_total' => $lineTotal,
                     'certificate_code' => 'DCJ-'.Str::upper(Str::random(12)),
@@ -93,8 +129,11 @@ class OrderController extends Controller
 
             $shippingFee = $subtotal > 500000 ? 0 : 30000;
             $tax = (int) round($subtotal * 0.08);
-            $discount = $user ? (int) round($subtotal * 0.05) : 0;
-            $total = $subtotal + $shippingFee + $tax - $discount;
+            $memberDiscount = $user ? (int) round($subtotal * 0.05) : 0;
+            $coupon = $coupons->resolve($validated['coupon_code'] ?? null, $subtotal, true);
+            $couponDiscount = $coupon?->calculateDiscount($subtotal) ?? 0;
+            $discount = $memberDiscount + $couponDiscount;
+            $total = max(0, $subtotal + $shippingFee + $tax - $discount);
 
             $customerLocation = $this->resolveLocation(
                 $validated['customer']['province_code'] ?? null,
@@ -120,6 +159,8 @@ class OrderController extends Controller
             $order = Order::create([
                 'order_number' => 'DH'.now()->format('ymdHis').Str::upper(Str::random(3)),
                 'user_id' => $user?->id,
+                'coupon_id' => $coupon?->id,
+                'coupon_code' => $coupon?->code,
                 'customer_name' => $validated['customer']['name'],
                 'customer_email' => $validated['customer']['email'],
                 'customer_phone' => $validated['customer']['phone'],
@@ -142,13 +183,16 @@ class OrderController extends Controller
                 'shipping_fee' => $shippingFee,
                 'tax' => $tax,
                 'discount' => $discount,
+                'member_discount' => $memberDiscount,
+                'coupon_discount' => $couponDiscount,
                 'total' => $total,
                 'note' => $validated['note'] ?? null,
             ]);
 
             $order->items()->createMany($items->all());
+            $coupon?->increment('usage_count');
 
-            return $order->load('items');
+            return $order->load(['items', 'coupon']);
         });
 
         CartController::clearForRequest($request, $user);

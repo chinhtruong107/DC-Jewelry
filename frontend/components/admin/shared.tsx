@@ -1,48 +1,93 @@
 import type React from "react";
-import { Boxes, LayoutDashboard, RefreshCcw, Settings, ShoppingBag, Star, Users, X } from "lucide-react";
+import { Boxes, LayoutDashboard, RefreshCcw, Settings, ShoppingBag, Star, TicketPercent, Users, X } from "lucide-react";
 import { STORAGE_KEYS } from "@/lib/storageKeys";
 
-export type AdminTab = "overview" | "products" | "orders" | "returns" | "customers" | "reviews" | "settings";
+export type AdminTab = "overview" | "products" | "promotions" | "orders" | "returns" | "customers" | "reviews" | "settings";
 export type RevenueMode = "day" | "month";
 
 export type AdminProduct = {
   id: number;
   name: string;
+  name_en?: string | null;
   price: number;
   image?: string | null;
   raw_image?: string | null;
   description?: string | null;
+  description_en?: string | null;
   category?: string | null;
   stock?: number | null;
   status?: string | null;
   is_best_seller?: boolean;
   isBestSeller?: boolean;
   warranty_months?: number;
+  variants?: AdminProductVariant[];
+};
+
+export type AdminProductVariant = {
+  id?: number;
+  sku: string;
+  size: string;
+  length: string;
+  gold_type: string;
+  price: string;
+  stock: string;
+  is_active: boolean;
 };
 
 export type ProductFormState = {
   name: string;
+  name_en: string;
   price: string;
   category: string;
   stock: string;
   status: "active" | "inactive";
   image: string;
   description: string;
+  description_en: string;
   is_best_seller: boolean;
   warranty_months: string;
+  variants: AdminProductVariant[];
 };
 
 export type ProductPayload = {
   name: string;
+  name_en: string | null;
   price: number;
   category: string;
   stock: number;
   status: ProductFormState["status"];
   image: string | null;
   description: string | null;
+  description_en: string | null;
   is_best_seller: boolean;
   warranty_months: number;
   image_data?: string;
+  variants: Array<{
+    id?: number;
+    sku: string | null;
+    size: string | null;
+    length: string | null;
+    gold_type: string | null;
+    price: number;
+    stock: number;
+    is_active: boolean;
+  }>;
+};
+
+export type AdminCoupon = {
+  id: number;
+  code: string;
+  name: string;
+  description?: string | null;
+  discount_type: "percentage" | "fixed";
+  discount_value: number;
+  minimum_order_amount: number;
+  maximum_discount_amount?: number | null;
+  usage_limit?: number | null;
+  usage_count: number;
+  starts_at?: string | null;
+  expires_at?: string | null;
+  is_active: boolean;
 };
 
 export type AdminOrderItem = {
@@ -154,6 +199,7 @@ export type AdminReview = {
 
 export type DashboardData = {
   products: AdminProduct[];
+  coupons: AdminCoupon[];
   orders: AdminOrder[];
   users: AdminUser[];
   reviews: AdminReview[];
@@ -177,19 +223,23 @@ export const ADMIN_KEY = STORAGE_KEYS.adminUser;
 
 export const emptyProductForm: ProductFormState = {
   name: "",
+  name_en: "",
   price: "",
   category: "Dây chuyền",
   stock: "100",
   status: "active",
   image: "",
   description: "",
+  description_en: "",
   is_best_seller: false,
   warranty_months: "12",
+  variants: [],
 };
 
 export const navItems: { id: AdminTab; label: string; icon: typeof LayoutDashboard }[] = [
   { id: "overview", label: "Tổng quan", icon: LayoutDashboard },
   { id: "products", label: "Sản phẩm", icon: Boxes },
+  { id: "promotions", label: "Khuyến mãi", icon: TicketPercent },
   { id: "orders", label: "Đơn hàng", icon: ShoppingBag },
   { id: "returns", label: "Hậu mãi", icon: RefreshCcw },
   { id: "customers", label: "Khách hàng", icon: Users },

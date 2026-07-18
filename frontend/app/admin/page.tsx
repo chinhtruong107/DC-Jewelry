@@ -8,6 +8,7 @@ import { CircleDollarSign, LogOut, PackageCheck, PanelLeft, Search, ShieldCheck,
 
 import OverviewView from "@/components/admin/OverviewView";
 import ProductsView from "@/components/admin/ProductsView";
+import PromotionsView from "@/components/admin/PromotionsView";
 import OrdersView from "@/components/admin/OrdersView";
 import CustomersView from "@/components/admin/CustomersView";
 import ReviewsView from "@/components/admin/ReviewsView";
@@ -112,7 +113,7 @@ export default function AdminPage() {
     if (!data) return [];
     if (!searchText) return data.products;
     return data.products.filter((product) =>
-      [product.name, product.category, product.status]
+      [product.name, product.name_en, product.category, product.status]
         .filter(Boolean)
         .some((item) => item?.toLowerCase().includes(searchText))
     );
@@ -392,14 +393,26 @@ export default function AdminPage() {
     setEditingProductId(product.id);
     setProductForm({
       name: product.name || "",
+      name_en: product.name_en || "",
       price: String(product.price ?? ""),
       category: product.category || "Dây chuyền",
       stock: String(product.stock ?? 0),
       status: product.status === "inactive" ? "inactive" : "active",
       image: product.raw_image || product.image || "",
       description: product.description || "",
+      description_en: product.description_en || "",
       is_best_seller: Boolean(product.is_best_seller ?? product.isBestSeller),
       warranty_months: String(product.warranty_months ?? 12),
+      variants: (product.variants || []).map((variant) => ({
+        id: variant.id,
+        sku: variant.sku || "",
+        size: variant.size || "",
+        length: variant.length || "",
+        gold_type: variant.gold_type || "",
+        price: String(variant.price ?? product.price ?? ""),
+        stock: String(variant.stock ?? 0),
+        is_active: variant.is_active !== false,
+      })),
     });
     setSelectedProductImageFile(null);
     setProductError("");
@@ -418,14 +431,26 @@ export default function AdminPage() {
   const productPayload = async (): Promise<ProductPayload> => {
     const payload: ProductPayload = {
       name: productForm.name.trim(),
+      name_en: productForm.name_en.trim() || null,
       price: Number(productForm.price),
       category: productForm.category.trim(),
       stock: Number(productForm.stock),
       status: productForm.status,
       image: productForm.image.trim() || null,
       description: productForm.description.trim() || null,
+      description_en: productForm.description_en.trim() || null,
       is_best_seller: productForm.is_best_seller,
       warranty_months: Number(productForm.warranty_months),
+      variants: productForm.variants.map((variant) => ({
+        id: variant.id,
+        sku: variant.sku.trim() || null,
+        size: variant.size.trim() || null,
+        length: variant.length.trim() || null,
+        gold_type: variant.gold_type.trim() || null,
+        price: Number(variant.price),
+        stock: Number(variant.stock),
+        is_active: variant.is_active,
+      })),
     };
 
     if (selectedProductImageFile) {
@@ -847,6 +872,14 @@ export default function AdminPage() {
                 creatingShipmentOrderId={creatingShipmentOrderId}
                 onUpdateOrderStatus={handleUpdateOrderStatus}
                 onCreateShipment={handleCreateShipment}
+              />
+            )}
+
+            {data && activeTab === "promotions" && (
+              <PromotionsView
+                coupons={data.coupons || []}
+                token={token}
+                onCouponsChange={(coupons) => setData((current) => current ? { ...current, coupons } : current)}
               />
             )}
 

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Coupon;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\ProductReview;
@@ -60,7 +61,7 @@ class AdminController extends Controller
 
     public function dashboard(Request $request)
     {
-        $products = Product::latest()
+        $products = Product::with('variants')->latest()
             ->get()
             ->map(function (Product $product) {
                 return array_merge($product->toArray(), [
@@ -76,6 +77,7 @@ class AdminController extends Controller
             ->latest('requested_at')
             ->get();
         $today = Carbon::today();
+        $coupons = Coupon::latest()->get();
 
         return response()->json([
             'products' => $products,
@@ -83,6 +85,7 @@ class AdminController extends Controller
             'users' => $users,
             'reviews' => $reviews,
             'returns' => $returns,
+            'coupons' => $coupons,
             'summary' => [
                 'revenue_today' => Order::whereDate('created_at', $today)->sum('total'),
                 'revenue_total' => Order::where('status', '!=', 'cancelled')->sum('total'),

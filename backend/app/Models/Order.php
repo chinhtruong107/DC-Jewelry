@@ -17,6 +17,8 @@ class Order extends Model
     protected $fillable = [
         'order_number',
         'user_id',
+        'coupon_id',
+        'coupon_code',
         'customer_name',
         'customer_email',
         'customer_phone',
@@ -51,6 +53,9 @@ class Order extends Model
         'shipping_fee',
         'tax',
         'discount',
+        'member_discount',
+        'coupon_discount',
+        'coupon_usage_released_at',
         'total',
         'note',
     ];
@@ -60,6 +65,9 @@ class Order extends Model
         'shipping_fee' => 'integer',
         'tax' => 'integer',
         'discount' => 'integer',
+        'member_discount' => 'integer',
+        'coupon_discount' => 'integer',
+        'coupon_usage_released_at' => 'datetime',
         'total' => 'integer',
         'vnpay_paid_at' => 'datetime',
         'shipped_at' => 'datetime',
@@ -74,6 +82,11 @@ class Order extends Model
     public function items()
     {
         return $this->hasMany(OrderItem::class);
+    }
+
+    public function coupon()
+    {
+        return $this->belongsTo(Coupon::class);
     }
 
     public function reviews()
@@ -114,6 +127,20 @@ class Order extends Model
                     if ($item->product_id) {
                         Product::whereKey($item->product_id)->increment('stock', $item->quantity);
                     }
+
+                    if ($item->product_variant_id) {
+                        ProductVariant::whereKey($item->product_variant_id)->increment('stock', $item->quantity);
+                    }
+                }
+
+                if ($order->coupon_id && ! $order->coupon_usage_released_at) {
+                    $coupon = Coupon::whereKey($order->coupon_id)->lockForUpdate()->first();
+
+                    if ($coupon && $coupon->usage_count > 0) {
+                        $coupon->decrement('usage_count');
+                    }
+
+                    $order->coupon_usage_released_at = now();
                 }
 
                 $order->forceFill([

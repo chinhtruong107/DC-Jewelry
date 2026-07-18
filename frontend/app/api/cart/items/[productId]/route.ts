@@ -5,7 +5,9 @@ type RouteContext = { params: Promise<{ productId: string }> };
 export async function PATCH(request: Request, { params }: RouteContext) {
   try {
     const { productId } = await params;
-    const response = await fetch(`${LARAVEL_API_URL}/cart/items/${encodeURIComponent(productId)}`, {
+    const url = new URL(request.url);
+    const query = url.searchParams.toString();
+    const response = await fetch(`${LARAVEL_API_URL}/cart/items/${encodeURIComponent(productId)}${query ? `?${query}` : ""}`, {
       method: "PATCH",
       headers: forwardedHeaders(request),
       body: JSON.stringify(await request.json()),
@@ -19,7 +21,9 @@ export async function PATCH(request: Request, { params }: RouteContext) {
 export async function DELETE(request: Request, { params }: RouteContext) {
   try {
     const { productId } = await params;
-    const response = await fetch(`${LARAVEL_API_URL}/cart/items/${encodeURIComponent(productId)}`, {
+    const url = new URL(request.url);
+    const query = url.searchParams.toString();
+    const response = await fetch(`${LARAVEL_API_URL}/cart/items/${encodeURIComponent(productId)}${query ? `?${query}` : ""}`, {
       method: "DELETE",
       headers: forwardedHeaders(request),
     });

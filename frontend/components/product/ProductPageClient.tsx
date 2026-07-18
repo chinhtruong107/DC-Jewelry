@@ -8,6 +8,8 @@ import ShareProduct from "@/components/product/ShareProduct";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 import { useFavorites } from "@/context/FavoritesContext";
+import { useLanguage } from "@/context/LanguageContext";
+import { productDescription as localizedDescription, productName as localizedName, variantLabel } from "@/lib/productLocale";
 import { cn, fixVietnameseText, formatVND, productImageUrl } from "@/lib/utils";
 import type { Product } from "@/types/product";
 import { Check, Heart, Minus, Plus, ShieldCheck, ShoppingBag, Star } from "lucide-react";
@@ -29,6 +31,7 @@ export default function ProductPageClient() {
   const { addToCart, guestToken } = useCart();
   const { token } = useAuth();
   const { toggleFavorite, isFavorite } = useFavorites();
+  const { language } = useLanguage();
   const { productId } = useParams();
   const router = useRouter();
   const [product, setProduct] = useState<Product | undefined>();
@@ -39,6 +42,7 @@ export default function ProductPageClient() {
   const [reviews, setReviews] = useState<ProductReview[]>([]);
   const [isLoadingReviews, setIsLoadingReviews] = useState(true);
   const [cartError, setCartError] = useState("");
+  const [selectedVariantId, setSelectedVariantId] = useState<number | null>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -107,6 +111,12 @@ export default function ProductPageClient() {
     [reviews]
   );
 
+  useEffect(() => {
+    const firstAvailableVariant = product?.variants?.find((variant) => variant.is_active && variant.stock > 0);
+    setSelectedVariantId(firstAvailableVariant?.id ?? null);
+    setQuantity(1);
+  }, [product]);
+
   if (isLoadingProduct) {
     return (
       <main className="min-h-screen bg-[#f5f0e7] px-6 py-24 text-center text-[#756568]">
@@ -120,15 +130,20 @@ export default function ProductPageClient() {
     return <ProductNotFound />;
   }
 
-  const stock = product.stock ?? 100;
+  const activeVariants = product.variants?.filter((variant) => variant.is_active) ?? [];
+  const selectedVariant = activeVariants.find((variant) => variant.id === selectedVariantId);
+  const stock = selectedVariant?.stock ?? product.stock ?? 100;
+  const price = selectedVariant?.price ?? product.price;
   const isOutOfStock = stock <= 0 || product.status === "inactive";
   const isLiked = isFavorite(product.id);
   const imageUrl = productImageUrl(product.image);
-  const productName = fixVietnameseText(product.name);
+  const productName = fixVietnameseText(localizedName(product, language));
   const productCategory = fixVietnameseText(product.category) || "Fine jewelry";
   const productDescription =
-    fixVietnameseText(product.description) ||
-    "Thiết kế được tuyển chọn dành cho những khoảnh khắc cần một điểm sáng tinh tế.";
+    fixVietnameseText(localizedDescription(product, language)) ||
+    (language === "en"
+      ? "A refined jewelry design selected to bring a graceful highlight to meaningful moments."
+      : "Thiết kế được tuyển chọn dành cho những khoảnh khắc cần một điểm sáng tinh tế.");
 
   const handleAddToCart = async () => {
     if (isOutOfStock) return;
@@ -138,11 +153,15 @@ export default function ProductPageClient() {
     try {
       await addToCart({
         id: product.id,
-        name: productName,
-        price: product.price,
+        name: product.name,
+        name_en: product.name_en,
+        price,
         image: imageUrl,
         quantity,
         stock,
+        variant_id: selectedVariant?.id,
+        variant_sku: selectedVariant?.sku,
+        variant_label: selectedVariant ? variantLabel(selectedVariant, language) : undefined,
       });
       setJustAdded(true);
       setTimeout(() => setJustAdded(false), 2000);
@@ -228,7 +247,7 @@ export default function ProductPageClient() {
             </div>
 
             <div className="mt-8 flex flex-wrap items-center gap-4 border-y border-[#28171a]/12 py-6">
-              <span className="font-serif text-4xl font-normal text-[#7a2130]">{formatVND(product.price)}</span>
+              <span className="font-serif text-4xl font-normal text-[#7a2130]">{formatVND(price)}</span>
               <span
                 className={cn(
                   "border px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.2em]",
@@ -247,6 +266,49 @@ export default function ProductPageClient() {
             <p className="mt-7 max-w-2xl text-base leading-8 text-[#756568]">{productDescription}</p>
 
             <div className="mt-8 space-y-5">
+              {activeVariants.length > 0 && (
+                <div>
+                  <div className="mb-3 flex items-center justify-between gap-3">
+                    <span className="text-[10px] font-bold uppercase tracking-[0.24em] text-[#7a2130]">
+                      Phiên bản sản phẩm
+                    </span>
+                    {selectedVariant && (
+                      <span className="text-[10px] uppercase tracking-[0.16em] text-[#756568]">SKU {selectedVariant.sku}</span>
+                    )}
+                  </div>
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    {activeVariants.map((variant) => {
+                      const isSelected = variant.id === selectedVariantId;
+                      const isUnavailable = variant.stock <= 0;
+
+                      return (
+                        <button
+                          key={variant.id}
+                          type="button"
+                          onClick={() => {
+                            setSelectedVariantId(variant.id);
+                            setQuantity(1);
+                          }}
+                          disabled={isUnavailable}
+                          className={cn(
+                            "border px-4 py-3 text-left transition",
+                            isSelected
+                              ? "border-[#7a2130] bg-[#7a2130] text-[#fffaf2]"
+                              : "border-[#28171a]/15 bg-[#fffdf9] text-[#28171a] hover:border-[#7a2130]/55",
+                            isUnavailable && "cursor-not-allowed opacity-45",
+                          )}
+                        >
+                          <span className="block text-xs font-semibold">{variantLabel(variant, language)}</span>
+                          <span className={cn("mt-1 block text-[10px]", isSelected ? "text-[#fffaf2]/75" : "text-[#756568]")}>
+                            {formatVND(variant.price)} · {variant.stock > 0 ? `Còn ${variant.stock}` : "Hết hàng"}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
               <div className="flex flex-wrap items-center gap-4">
                 <span className="text-[10px] font-bold uppercase tracking-[0.24em] text-[#7a2130]">Số lượng</span>
                 <div className="grid h-12 grid-cols-[44px_64px_44px] border border-[#28171a]/16 bg-[#fffdf9]">

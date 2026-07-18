@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Cart;
 use App\Models\Product;
+use App\Models\ProductVariant;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -20,15 +21,23 @@ class CartController extends Controller
     {
         $validated = $request->validate([
             'product_id' => ['required', 'integer', 'exists:products,id'],
+            'variant_id' => ['nullable', 'integer', 'exists:product_variants,id'],
             'quantity' => ['nullable', 'integer', 'min:1'],
         ]);
         $product = Product::findOrFail($validated['product_id']);
+        $variant = $this->resolveVariant($product, $validated['variant_id'] ?? null);
         $quantity = (int) ($validated['quantity'] ?? 1);
 
-        $this->ensureProductCanBeAdded($product, $quantity);
+        $this->ensureProductCanBeAdded($product, $variant, $quantity);
         $cart = $this->resolveCart($request);
-        $item = $cart->items()->firstOrNew(['product_id' => $product->id]);
-        $item->quantity = min($product->stock, ($item->exists ? $item->quantity : 0) + $quantity);
+        $variantKey = $variant ? 'variant:'.$variant->id : 'base';
+        $item = $cart->items()->firstOrNew([
+            'product_id' => $product->id,
+            'variant_key' => $variantKey,
+        ]);
+        $item->product_variant_id = $variant?->id;
+        $availableStock = $variant?->stock ?? $product->stock;
+        $item->quantity = min($availableStock, ($item->exists ? $item->quantity : 0) + $quantity);
         $item->save();
 
         return response()->json($this->cartPayload($cart->fresh()), 201);
@@ -40,10 +49,11 @@ class CartController extends Controller
             'quantity' => ['required', 'integer', 'min:1'],
         ]);
         $quantity = (int) $validated['quantity'];
-        $this->ensureProductCanBeAdded($product, $quantity);
+        $variant = $this->resolveVariant($product, $request->query('variant_id'), false);
+        $this->ensureProductCanBeAdded($product, $variant, $quantity);
         $cart = $this->resolveCart($request);
-        $item = $cart->items()->where('product_id', $product->id)->firstOrFail();
-        $item->update(['quantity' => min($quantity, $product->stock)]);
+        $item = $this->findCartItem($cart, $product, $variant);
+        $item->update(['quantity' => min($quantity, $variant?->stock ?? $product->stock)]);
 
         return response()->json($this->cartPayload($cart->fresh()));
     }
@@ -51,7 +61,8 @@ class CartController extends Controller
     public function destroyItem(Request $request, Product $product)
     {
         $cart = $this->resolveCart($request);
-        $cart->items()->where('product_id', $product->id)->delete();
+        $variant = $this->resolveVariant($product, $request->query('variant_id'), false);
+        $this->findCartItem($cart, $product, $variant)->delete();
 
         return response()->json($this->cartPayload($cart->fresh()));
     }
@@ -79,15 +90,23 @@ class CartController extends Controller
                 return $userCart;
             }
 
-            $guestCart->load('items.product');
+            $guestCart->load(['items.product', 'items.variant']);
             foreach ($guestCart->items as $guestItem) {
-                if (! $guestItem->product || $guestItem->product->status !== 'active' || $guestItem->product->stock < 1) {
+                $availableStock = $guestItem->variant?->stock ?? $guestItem->product?->stock ?? 0;
+                if (! $guestItem->product
+                    || $guestItem->product->status !== 'active'
+                    || ($guestItem->product_variant_id && (! $guestItem->variant || ! $guestItem->variant->is_active))
+                    || $availableStock < 1) {
                     continue;
                 }
 
-                $userItem = $userCart->items()->firstOrNew(['product_id' => $guestItem->product_id]);
+                $userItem = $userCart->items()->firstOrNew([
+                    'product_id' => $guestItem->product_id,
+                    'variant_key' => $guestItem->variant_key,
+                ]);
+                $userItem->product_variant_id = $guestItem->product_variant_id;
                 $userItem->quantity = min(
-                    $guestItem->product->stock,
+                    $availableStock,
                     ($userItem->exists ? $userItem->quantity : 0) + $guestItem->quantity
                 );
                 $userItem->save();
@@ -143,28 +162,80 @@ class CartController extends Controller
             : null;
     }
 
-    private function ensureProductCanBeAdded(Product $product, int $quantity): void
+    private function resolveVariant(Product $product, mixed $variantId, bool $requireForVariantProduct = true): ?ProductVariant
     {
-        if ($product->status !== 'active' || $product->stock < $quantity) {
+        if ($variantId !== null && $variantId !== '') {
+            $variant = $product->variants()->whereKey((int) $variantId)->where('is_active', true)->first();
+
+            if (! $variant) {
+                throw ValidationException::withMessages([
+                    'variant_id' => ['Biến thể không tồn tại hoặc không thuộc sản phẩm này.'],
+                ]);
+            }
+
+            return $variant;
+        }
+
+        if ($requireForVariantProduct && $product->variants()->where('is_active', true)->exists()) {
             throw ValidationException::withMessages([
-                'quantity' => ["Sản phẩm {$product->name} chỉ còn {$product->stock} sản phẩm."],
+                'variant_id' => ['Vui lòng chọn kích thước, chiều dài hoặc loại vàng trước khi thêm vào giỏ.'],
+            ]);
+        }
+
+        return null;
+    }
+
+    private function ensureProductCanBeAdded(Product $product, ?ProductVariant $variant, int $quantity): void
+    {
+        $availableStock = $variant?->stock ?? $product->stock;
+
+        if ($product->status !== 'active' || $availableStock < $quantity) {
+            throw ValidationException::withMessages([
+                'quantity' => ["Sản phẩm {$product->name} chỉ còn {$availableStock} sản phẩm."],
             ]);
         }
     }
 
+    private function findCartItem(Cart $cart, Product $product, ?ProductVariant $variant)
+    {
+        $variantKey = $variant ? 'variant:'.$variant->id : 'base';
+
+        return $cart->items()
+            ->where('product_id', $product->id)
+            ->where('variant_key', $variantKey)
+            ->firstOrFail();
+    }
+
     private function cartPayload(Cart $cart): array
     {
-        $cart->load(['items.product']);
+        $cart->load(['items.product', 'items.variant']);
         $items = $cart->items
-            ->filter(fn ($item) => $item->product && $item->product->status === 'active' && $item->product->stock > 0)
-            ->map(fn ($item) => [
-                'id' => $item->product->id,
-                'name' => $item->product->name,
-                'price' => $item->product->price,
-                'image' => $item->product->image,
-                'stock' => $item->product->stock,
-                'quantity' => min($item->quantity, $item->product->stock),
-            ])
+            ->filter(function ($item) {
+                $availableStock = $item->variant?->stock ?? $item->product?->stock ?? 0;
+
+                return $item->product
+                    && $item->product->status === 'active'
+                    && (! $item->product_variant_id || ($item->variant && $item->variant->is_active))
+                    && $availableStock > 0;
+            })
+            ->map(function ($item) {
+                $availableStock = $item->variant?->stock ?? $item->product->stock;
+
+                return [
+                    'cart_item_id' => $item->id,
+                    'id' => $item->product->id,
+                    'name' => $item->product->name,
+                    'name_en' => $item->product->name_en,
+                    'price' => $item->variant?->price ?? $item->product->price,
+                    'image' => $item->product->image,
+                    'stock' => $availableStock,
+                    'quantity' => min($item->quantity, $availableStock),
+                    'variant_id' => $item->variant?->id,
+                    'variant_sku' => $item->variant?->sku,
+                    'variant_label' => $item->variant?->label,
+                    'variant_options' => $item->variant?->options(),
+                ];
+            })
             ->values();
 
         return [

@@ -1,10 +1,12 @@
 <?php
 
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\AdminCouponController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CertificateController;
 use App\Http\Controllers\CustomerEngagementController;
+use App\Http\Controllers\CouponController;
 use App\Http\Controllers\DonHangController;
 use App\Http\Controllers\FavoriteController;
 use App\Http\Controllers\LocationController;
@@ -36,6 +38,7 @@ Route::get('certificates/{certificateCode}', [CertificateController::class, 'sho
 Route::get('shipments/track/{trackingNumber}', [ShipmentController::class, 'track']);
 Route::get('locations/provinces', [LocationController::class, 'provinces']);
 Route::get('locations/provinces/{provinceCode}/wards', [LocationController::class, 'wards']);
+Route::post('coupons/validate', [CouponController::class, 'validateCoupon'])->middleware('throttle:30,1');
 
 Route::get('product-images/{path}', function (string $path) {
     abort_unless(Storage::disk('public')->exists($path), 404);
@@ -75,6 +78,9 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
     Route::put('products/{id}', [ProductController::class, 'update']);
     Route::patch('products/{id}', [ProductController::class, 'update']);
     Route::delete('products/{id}', [ProductController::class, 'destroy']);
+    Route::post('admin/coupons', [AdminCouponController::class, 'store']);
+    Route::put('admin/coupons/{coupon}', [AdminCouponController::class, 'update']);
+    Route::delete('admin/coupons/{coupon}', [AdminCouponController::class, 'destroy']);
     Route::apiResource('don_hangs', DonHangController::class);
 });
 

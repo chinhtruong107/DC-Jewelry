@@ -28,7 +28,7 @@ export default function CartItemList() {
           <Trash2 className="mr-2 h-4 w-4" /> {isClearing ? "Đang xóa..." : "Xóa tất cả"}
         </Button>
       </div>
-      <div className="space-y-5">{cart.map((item, index) => <CartItem key={`${item.id}-${index}`} item={item} isLast={index === cart.length - 1} />)}</div>
+      <div className="space-y-5">{cart.map((item, index) => <CartItem key={item.cart_item_id ?? `${item.id}-${item.variant_id ?? "base"}-${index}`} item={item} isLast={index === cart.length - 1} />)}</div>
     </section>
   );
 }

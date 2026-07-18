@@ -3,6 +3,7 @@
 import { useAuth } from "@/context/AuthContext";
 import { useCart } from "@/context/CartContext";
 import { useLanguage } from "@/context/LanguageContext";
+import { productName } from "@/lib/productLocale";
 import { fixVietnameseText, formatVND, productImageUrl } from "@/lib/utils";
 import type { Product } from "@/types/product";
 import { Languages, LogOut, Menu, Search, ShoppingBag, User as UserIcon, X } from "lucide-react";
@@ -33,7 +34,11 @@ export default function Header() {
   }, [normalizedQuery, products]);
   const productSuggestions = useMemo(() => {
     if (!normalizedQuery) return [];
-    return products.filter((product) => product.name.toLowerCase().includes(normalizedQuery) || fixVietnameseText(product.description).toLowerCase().includes(normalizedQuery)).slice(0, 4);
+    return products.filter((product) =>
+      [product.name, product.name_en, product.description, product.description_en]
+        .filter(Boolean)
+        .some((value) => fixVietnameseText(value).toLowerCase().includes(normalizedQuery))
+    ).slice(0, 4);
   }, [normalizedQuery, products]);
   const hasSearchSuggestions = normalizedQuery.length > 0 && (categorySuggestions.length > 0 || productSuggestions.length > 0);
 
@@ -136,7 +141,7 @@ export default function Header() {
             <form className="relative mx-auto max-w-3xl" onSubmit={handleSearch}>
               <Search className="absolute left-0 top-1/2 h-5 w-5 -translate-y-1/2 text-[#7a2130]" />
               <input type="search" placeholder={t("Tìm kiếm thiết kế, chất liệu...")} value={searchQuery} onChange={(event) => setSearchQuery(event.target.value)} className="h-12 w-full border-0 border-b border-[#28171a]/30 bg-transparent pl-8 pr-4 text-sm text-[#28171a] outline-none placeholder:text-[#79686a]/60 focus:border-[#7a2130]" autoFocus />
-              {hasSearchSuggestions && <SearchSuggestions categorySuggestions={categorySuggestions} productSuggestions={productSuggestions} onClose={() => { setSearchQuery(""); setIsSearchOpen(false); setIsMobileOpen(false); }} />}
+              {hasSearchSuggestions && <SearchSuggestions language={language} categorySuggestions={categorySuggestions} productSuggestions={productSuggestions} onClose={() => { setSearchQuery(""); setIsSearchOpen(false); setIsMobileOpen(false); }} />}
             </form>
           </div>
         )}
@@ -151,20 +156,21 @@ export default function Header() {
   );
 }
 
-function SearchSuggestions({ categorySuggestions, productSuggestions, onClose }: { categorySuggestions: string[]; productSuggestions: Product[]; onClose: () => void }) {
+function SearchSuggestions({ language, categorySuggestions, productSuggestions, onClose }: { language: "vi" | "en"; categorySuggestions: string[]; productSuggestions: Product[]; onClose: () => void }) {
   return (
     <div className="absolute left-0 right-0 top-full z-50 mt-2 border border-[#28171a]/10 bg-[#fffdf9] p-4 shadow-[0_24px_60px_rgba(54,28,32,0.14)]">
       {categorySuggestions.length > 0 && <div className="mb-4"><p className="mb-2 text-[9px] font-bold uppercase tracking-[0.24em] text-[#7a2130]">Danh mục</p><div className="flex flex-wrap gap-2">{categorySuggestions.map((category) => <Link key={category} href={`/search?q=${encodeURIComponent(category)}`} onClick={onClose} className="border border-[#28171a]/15 px-3 py-2 text-xs text-[#4e3b3e] hover:border-[#7a2130]">{category}</Link>)}</div></div>}
-      {productSuggestions.length > 0 && <div><p className="mb-2 text-[9px] font-bold uppercase tracking-[0.24em] text-[#7a2130]">Sản phẩm</p><div className="grid gap-2 sm:grid-cols-2">{productSuggestions.map((product) => <SearchProductSuggestion key={product.id} product={product} onClick={onClose} />)}</div></div>}
+      {productSuggestions.length > 0 && <div><p className="mb-2 text-[9px] font-bold uppercase tracking-[0.24em] text-[#7a2130]">Sản phẩm</p><div className="grid gap-2 sm:grid-cols-2">{productSuggestions.map((product) => <SearchProductSuggestion key={product.id} language={language} product={product} onClick={onClose} />)}</div></div>}
     </div>
   );
 }
 
-function SearchProductSuggestion({ product, onClick }: { product: Product; onClick: () => void }) {
+function SearchProductSuggestion({ product, language, onClick }: { product: Product; language: "vi" | "en"; onClick: () => void }) {
+  const displayName = productName(product, language);
   return (
     <Link href={`/product/${product.id}`} onClick={onClick} className="flex items-center gap-3 p-2 transition hover:bg-[#f5eee6]">
-      <Image src={productImageUrl(product.image)} alt={product.name} width={56} height={56} className="h-14 w-14 shrink-0 bg-[#f0e8dc] object-cover" />
-      <div className="min-w-0 flex-1"><p className="line-clamp-1 text-sm font-medium text-[#28171a]">{product.name}</p><p className="mt-1 text-xs text-[#7a2130]">{formatVND(product.price)}</p></div>
+      <Image src={productImageUrl(product.image)} alt={displayName} width={56} height={56} className="h-14 w-14 shrink-0 bg-[#f0e8dc] object-cover" />
+      <div className="min-w-0 flex-1"><p className="line-clamp-1 text-sm font-medium text-[#28171a]">{displayName}</p><p className="mt-1 text-xs text-[#7a2130]">{formatVND(product.price)}</p></div>
     </Link>
   );
 }

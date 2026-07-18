@@ -16,6 +16,7 @@ class SyncProductCatalog extends Command
     {
         $updated = 0;
         $missingImages = 0;
+        $translations = require database_path('data/jewelry_product_translations.php');
 
         foreach (self::catalog() as $id => $item) {
             $image = $item['image'] ?? 'products/product-'.str_pad((string) $id, 2, '0', STR_PAD_LEFT).'.jpg';
@@ -29,9 +30,16 @@ class SyncProductCatalog extends Command
                 ['id' => $id],
                 [
                     'name' => $item['name'],
+                    'name_en' => $translations[$id] ?? null,
                     'price' => $item['price'],
                     'image' => $image,
                     'description' => $item['description'],
+                    'description_en' => match ($item['category']) {
+                        'Dây chuyền' => 'An elegant necklace crafted for refined everyday styling and meaningful occasions.',
+                        'Bông tai' => 'A polished pair of earrings designed to bring a graceful highlight to every look.',
+                        'Vòng tay' => 'A refined bracelet with balanced proportions, ideal for wearing alone or in a stack.',
+                        default => 'A refined jewelry design crafted with careful attention to every detail.',
+                    },
                     'category' => $item['category'],
                     'is_best_seller' => $item['is_best_seller'],
                     'stock' => $item['stock'],

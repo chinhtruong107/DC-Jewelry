@@ -5,12 +5,22 @@ import { readStoredValue, removeStoredValue, STORAGE_KEYS } from "@/lib/storageK
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 
 export interface CartItem {
+  cart_item_id?: number;
   id: number;
   name: string;
+  name_en?: string | null;
   price: number;
   image: string;
   quantity: number;
   stock?: number;
+  variant_id?: number | null;
+  variant_sku?: string | null;
+  variant_label?: string | null;
+  variant_options?: {
+    gold_type?: string;
+    size?: string;
+    length?: string;
+  } | null;
 }
 
 type CartPayload = {
@@ -25,9 +35,9 @@ interface CartContextProps {
   isCartReady: boolean;
   cartError: string;
   addToCart: (item: CartItem) => Promise<void>;
-  removeFromCart: (id: number) => Promise<void>;
+  removeFromCart: (id: number, variantId?: number | null) => Promise<void>;
   clearCart: () => Promise<void>;
-  updateQuantity: (id: number, quantity: number) => Promise<void>;
+  updateQuantity: (id: number, quantity: number, variantId?: number | null) => Promise<void>;
   refreshCart: () => Promise<void>;
 }
 
@@ -186,6 +196,7 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
     async (item: CartItem) => {
       await mutateCart("/api/cart/items", "POST", {
         product_id: item.id,
+        variant_id: item.variant_id ?? null,
         quantity: Math.max(1, item.quantity || 1),
       });
     },
@@ -193,8 +204,9 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
   );
 
   const removeFromCart = useCallback(
-    async (id: number) => {
-      await mutateCart(`/api/cart/items/${id}`, "DELETE");
+    async (id: number, variantId?: number | null) => {
+      const query = variantId ? `?variant_id=${variantId}` : "";
+      await mutateCart(`/api/cart/items/${id}${query}`, "DELETE");
     },
     [mutateCart]
   );
@@ -205,8 +217,9 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
   }, [mutateCart]);
 
   const updateQuantity = useCallback(
-    async (id: number, quantity: number) => {
-      await mutateCart(`/api/cart/items/${id}`, "PATCH", { quantity: Math.max(1, quantity) });
+    async (id: number, quantity: number, variantId?: number | null) => {
+      const query = variantId ? `?variant_id=${variantId}` : "";
+      await mutateCart(`/api/cart/items/${id}${query}`, "PATCH", { quantity: Math.max(1, quantity) });
     },
     [mutateCart]
   );

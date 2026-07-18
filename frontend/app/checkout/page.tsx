@@ -4,6 +4,8 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from "@/context/AuthContext";
 import { useCart } from "@/context/CartContext";
+import { useLanguage } from "@/context/LanguageContext";
+import { productName } from "@/lib/productLocale";
 import {
   buildFullAddress,
   fetchProvinces,
@@ -138,6 +140,7 @@ function CheckoutAddressBlock({
 export default function CheckoutPage() {
   const { cart, clearCart, guestToken } = useCart();
   const { user, token } = useAuth();
+  const { language } = useLanguage();
   const router = useRouter();
 
   const [formData, setFormData] = useState({
@@ -167,6 +170,10 @@ export default function CheckoutPage() {
   const [customerWards, setCustomerWards] = useState<WardOption[]>([]);
   const [recipientWards, setRecipientWards] = useState<WardOption[]>([]);
   const [locationError, setLocationError] = useState("");
+  const [couponCode, setCouponCode] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; discount: number } | null>(null);
+  const [couponError, setCouponError] = useState("");
+  const [isValidatingCoupon, setIsValidatingCoupon] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -237,9 +244,44 @@ export default function CheckoutPage() {
   const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const shipping = subtotal > 500000 ? 0 : 30000;
   const tax = Math.round(subtotal * 0.08);
-  const discount = user ? Math.round(subtotal * 0.05) : 0;
-  const total = subtotal + shipping + tax - discount;
+  const memberDiscount = user ? Math.round(subtotal * 0.05) : 0;
+  const couponDiscount = appliedCoupon?.discount ?? 0;
+  const total = Math.max(0, subtotal + shipping + tax - memberDiscount - couponDiscount);
   const itemCount = cart.reduce((sum, item) => sum + item.quantity, 0);
+
+  const handleApplyCoupon = async () => {
+    const code = couponCode.trim().toUpperCase();
+    setCouponError("");
+
+    if (!code) {
+      setAppliedCoupon(null);
+      setCouponError("Vui lòng nhập mã giảm giá.");
+      return;
+    }
+
+    setIsValidatingCoupon(true);
+    try {
+      const response = await fetch("/api/coupons/validate", {
+        method: "POST",
+        headers: { Accept: "application/json", "Content-Type": "application/json" },
+        body: JSON.stringify({ code, subtotal }),
+      });
+      const payload = await response.json();
+
+      if (!response.ok) {
+        const validationMessage = payload.errors ? Object.values(payload.errors as Record<string, string[]>).flat()[0] : null;
+        throw new Error(validationMessage || payload.message || "Mã giảm giá không hợp lệ.");
+      }
+
+      setCouponCode(payload.coupon.code);
+      setAppliedCoupon({ code: payload.coupon.code, discount: Number(payload.discount) });
+    } catch (error) {
+      setAppliedCoupon(null);
+      setCouponError(error instanceof Error ? error.message : "Không thể kiểm tra mã giảm giá.");
+    } finally {
+      setIsValidatingCoupon(false);
+    }
+  };
 
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
@@ -314,8 +356,10 @@ export default function CheckoutPage() {
             : undefined,
           items: cart.map((item) => ({
             id: item.id,
+            variant_id: item.variant_id ?? null,
             quantity: item.quantity,
           })),
+          coupon_code: appliedCoupon?.code ?? null,
           payment_method: paymentMethod,
         }),
       });
@@ -614,17 +658,18 @@ export default function CheckoutPage() {
 
               <div className="mt-5 max-h-64 space-y-4 overflow-y-auto pr-1">
                 {cart.map((item) => (
-                  <div key={item.id} className="grid grid-cols-[64px_1fr_auto] items-center gap-4">
+                  <div key={item.cart_item_id ?? `${item.id}-${item.variant_id ?? "base"}`} className="grid grid-cols-[64px_1fr_auto] items-center gap-4">
                     <div className="relative h-16 w-16 overflow-hidden bg-[#ede5d9]">
                       <Image
                         src={productImageUrl(item.image)}
-                        alt={fixVietnameseText(item.name)}
+                        alt={fixVietnameseText(productName(item, language))}
                         fill
                         className="object-cover mix-blend-multiply"
                       />
                     </div>
                     <div className="min-w-0">
-                      <h3 className="truncate text-sm font-semibold text-[#28171a]">{fixVietnameseText(item.name)}</h3>
+                      <h3 className="truncate text-sm font-semibold text-[#28171a]">{fixVietnameseText(productName(item, language))}</h3>
+                      {item.variant_label && <p className="mt-1 truncate text-[10px] font-semibold uppercase tracking-[0.1em] text-[#7a2130]">{item.variant_label}</p>}
                       <p className="mt-1 text-xs text-[#756568]">Số lượng: {item.quantity}</p>
                     </div>
                     <p className="text-right text-sm font-semibold text-[#28171a]">
@@ -632,6 +677,39 @@ export default function CheckoutPage() {
                     </p>
                   </div>
                 ))}
+              </div>
+
+              <div className="mt-6 border border-[#28171a]/12 bg-[#f8f3eb] p-4">
+                <label htmlFor="coupon-code" className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#7a2130]">
+                  Mã giảm giá
+                </label>
+                <div className="mt-2 flex gap-2">
+                  <Input
+                    id="coupon-code"
+                    value={couponCode}
+                    onChange={(event) => {
+                      setCouponCode(event.target.value.toUpperCase());
+                      setAppliedCoupon(null);
+                      setCouponError("");
+                    }}
+                    placeholder="WELCOME10"
+                    className={fieldClass}
+                  />
+                  <button
+                    type="button"
+                    onClick={handleApplyCoupon}
+                    disabled={isValidatingCoupon || subtotal <= 0}
+                    className="shrink-0 bg-[#28171a] px-4 text-[10px] font-bold uppercase tracking-[0.18em] text-white transition hover:bg-[#7a2130] disabled:opacity-50"
+                  >
+                    {isValidatingCoupon ? "Đang kiểm tra" : "Áp dụng"}
+                  </button>
+                </div>
+                {couponError && <p className="mt-2 text-xs font-medium text-rose-700">{couponError}</p>}
+                {appliedCoupon && (
+                  <p className="mt-2 inline-flex items-center gap-2 text-xs font-semibold text-emerald-700">
+                    <Check className="h-3.5 w-3.5" /> Đã áp dụng {appliedCoupon.code}
+                  </p>
+                )}
               </div>
 
               <div className="mt-6 space-y-3 border-y border-[#28171a]/12 py-5">
@@ -644,7 +722,13 @@ export default function CheckoutPage() {
                       <Check className="h-4 w-4" />
                       Ưu đãi thành viên
                     </span>
-                    <span>-{formatVND(discount)}</span>
+                    <span>-{formatVND(memberDiscount)}</span>
+                  </div>
+                )}
+                {appliedCoupon && (
+                  <div className="flex justify-between gap-3 border border-[#7a2130]/15 bg-[#7a2130]/5 px-3 py-2 text-sm font-semibold text-[#7a2130]">
+                    <span>Mã {appliedCoupon.code}</span>
+                    <span>-{formatVND(couponDiscount)}</span>
                   </div>
                 )}
                 <div className="flex items-end justify-between gap-4 pt-3">

@@ -3,15 +3,20 @@
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/context/CartContext";
 import { useFavorites } from "@/context/FavoritesContext";
+import { useLanguage } from "@/context/LanguageContext";
+import { productName } from "@/lib/productLocale";
 import { cn, fixVietnameseText, formatVND, productImageUrl } from "@/lib/utils";
 import type { Product } from "@/types/product";
 import { Check, Heart, Plus } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 export default function ProductCard({ product }: { product: Product }) {
   const { addToCart } = useCart();
+  const { language } = useLanguage();
+  const router = useRouter();
   const { toggleFavorite, isFavorite } = useFavorites();
   const isLiked = isFavorite(product.id);
   const [imageError, setImageError] = useState(false);
@@ -22,15 +27,21 @@ export default function ProductCard({ product }: { product: Product }) {
   const category = fixVietnameseText(product.category);
   const stock = product.stock ?? 100;
   const isOutOfStock = stock <= 0 || product.status === "inactive";
+  const displayName = productName(product, language);
+  const hasVariants = Boolean(product.variants?.some((variant) => variant.is_active));
 
   const handleAddToCart = async (event: React.MouseEvent) => {
     event.preventDefault();
     event.stopPropagation();
     if (isOutOfStock) return;
+    if (hasVariants) {
+      router.push(`/product/${product.id}`);
+      return;
+    }
     setIsAdding(true);
     setCartError("");
     try {
-      await addToCart({ id: product.id, name: product.name, price: product.price, image: imageUrl, quantity: 1, stock });
+      await addToCart({ id: product.id, name: product.name, name_en: product.name_en, price: product.price, image: imageUrl, quantity: 1, stock });
       setJustAdded(true);
       setTimeout(() => setJustAdded(false), 1800);
     } catch (error) {
@@ -52,7 +63,7 @@ export default function ProductCard({ product }: { product: Product }) {
       <div className="relative overflow-hidden bg-[#ede5d9]">
         <Link href={`/product/${product.id}`} className="block aspect-[4/5] overflow-hidden">
           {!imageError ? (
-            <Image src={imageUrl} alt={product.name} width={600} height={750} className={cn("h-full w-full object-cover mix-blend-multiply transition duration-700 ease-out group-hover:scale-[1.035]", isOutOfStock && "opacity-45 grayscale")} onError={() => setImageError(true)} />
+            <Image src={imageUrl} alt={displayName} width={600} height={750} className={cn("h-full w-full object-cover mix-blend-multiply transition duration-700 ease-out group-hover:scale-[1.035]", isOutOfStock && "opacity-45 grayscale")} onError={() => setImageError(true)} />
           ) : (
             <div className="flex h-full items-center justify-center text-xs uppercase tracking-[0.18em] text-[#89787a]">Chưa có hình ảnh</div>
           )}
@@ -74,11 +85,11 @@ export default function ProductCard({ product }: { product: Product }) {
         <div className="flex items-center justify-between gap-3 text-[9px] font-semibold uppercase tracking-[0.2em] text-[#8a777a]">
           <span>{category || "Fine jewelry"}</span><span>{stock <= 10 && !isOutOfStock ? "Limited" : ""}</span>
         </div>
-        <Link href={`/product/${product.id}`}><h2 className="mt-2 line-clamp-2 min-h-[3.5rem] font-serif text-[1.55rem] font-normal leading-7 text-[#28171a] transition group-hover:text-[#7a2130]">{product.name}</h2></Link>
+        <Link href={`/product/${product.id}`}><h2 className="mt-2 line-clamp-2 min-h-[3.5rem] font-serif text-[1.55rem] font-normal leading-7 text-[#28171a] transition group-hover:text-[#7a2130]">{displayName}</h2></Link>
         <div className="mt-3 flex items-center justify-between border-t border-[#28171a]/10 pt-3">
           <span className="text-sm font-semibold text-[#7a2130]">{formatVND(product.price)}</span>
           <button onClick={handleAddToCart} disabled={isAdding || isOutOfStock} className="text-[9px] font-bold uppercase tracking-[0.2em] text-[#28171a] underline decoration-[#7a2130]/40 underline-offset-4 transition hover:text-[#7a2130] disabled:opacity-40">
-            {isOutOfStock ? "Hết hàng" : isAdding ? "Đang thêm" : justAdded ? "Đã thêm" : "Thêm vào giỏ"}
+            {isOutOfStock ? "Hết hàng" : hasVariants ? "Chọn phiên bản" : isAdding ? "Đang thêm" : justAdded ? "Đã thêm" : "Thêm vào giỏ"}
           </button>
         </div>
       </div>

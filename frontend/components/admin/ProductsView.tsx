@@ -307,6 +307,16 @@ export default function ProductsView({
                   />
                 </label>
 
+                <label className="text-sm font-medium text-slate-700 dark:text-slate-200 xl:col-span-2">
+                  Tên sản phẩm (English)
+                  <input
+                    value={productForm.name_en}
+                    onChange={(event) => setProductForm((current) => ({ ...current, name_en: event.target.value }))}
+                    className="mt-1.5 h-10 w-full rounded-md border border-orange-100 bg-white px-3 text-sm outline-none transition focus:border-orange-400 focus:ring-2 focus:ring-orange-100 dark:border-slate-700 dark:bg-slate-950"
+                    placeholder="14K Gold Heart Necklace"
+                  />
+                </label>
+
                 <label className="text-sm font-medium text-slate-700 dark:text-slate-200">
                   Bảo hành (tháng)
                   <input
@@ -380,8 +390,109 @@ export default function ProductsView({
                     placeholder="Mô tả ngắn về sản phẩm"
                   />
                 </label>
+                <label className="text-sm font-medium text-slate-700 dark:text-slate-200 md:col-span-2 xl:col-span-4">
+                  Mô tả (English)
+                  <textarea
+                    value={productForm.description_en}
+                    onChange={(event) => setProductForm((current) => ({ ...current, description_en: event.target.value }))}
+                    className="mt-1.5 min-h-16 w-full rounded-md border border-orange-100 bg-white px-3 py-2 text-sm outline-none transition focus:border-orange-400 focus:ring-2 focus:ring-orange-100 dark:border-slate-700 dark:bg-slate-950"
+                    placeholder="English product description"
+                  />
+                </label>
               </div>
             </div>
+
+            <section className="rounded-lg border border-orange-100 bg-orange-50/40 p-4 dark:border-slate-700 dark:bg-slate-950/50">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <h3 className="text-sm font-semibold text-slate-950 dark:text-white">Biến thể sản phẩm</h3>
+                  <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                    Mỗi dòng là một tổ hợp kích thước, chiều dài và loại vàng với giá/tồn kho riêng.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setProductForm((current) => ({
+                    ...current,
+                    variants: [
+                      ...current.variants,
+                      {
+                        sku: "",
+                        size: "",
+                        length: "",
+                        gold_type: "",
+                        price: current.price,
+                        stock: "0",
+                        is_active: true,
+                      },
+                    ],
+                  }))}
+                  className="inline-flex h-9 items-center gap-2 rounded-md bg-slate-950 px-3 text-xs font-semibold text-white transition hover:bg-orange-600 dark:bg-orange-500 dark:hover:bg-orange-600"
+                >
+                  <Plus className="h-4 w-4" /> Thêm biến thể
+                </button>
+              </div>
+
+              {productForm.variants.length === 0 ? (
+                <p className="mt-4 rounded-md border border-dashed border-orange-200 px-4 py-5 text-center text-xs text-slate-500 dark:border-slate-700 dark:text-slate-400">
+                  Chưa có biến thể. Sản phẩm sẽ dùng giá và tồn kho chung ở phía trên.
+                </p>
+              ) : (
+                <div className="mt-4 space-y-3">
+                  {productForm.variants.map((variant, index) => {
+                    const updateVariant = (field: keyof typeof variant, value: string | boolean) => {
+                      setProductForm((current) => ({
+                        ...current,
+                        variants: current.variants.map((item, itemIndex) => itemIndex === index ? { ...item, [field]: value } : item),
+                      }));
+                    };
+
+                    return (
+                      <div key={variant.id ?? `new-${index}`} className="grid gap-2 rounded-md border border-orange-100 bg-white p-3 dark:border-slate-700 dark:bg-slate-900 md:grid-cols-2 xl:grid-cols-[1.15fr_0.8fr_0.8fr_1fr_1fr_0.75fr_auto]">
+                        <label className="text-xs font-medium text-slate-600 dark:text-slate-300">
+                          SKU
+                          <input value={variant.sku} onChange={(event) => updateVariant("sku", event.target.value.toUpperCase())} placeholder="Tự tạo nếu trống" className="mt-1 h-9 w-full rounded-md border border-orange-100 px-2 text-sm dark:border-slate-700 dark:bg-slate-950" />
+                        </label>
+                        <label className="text-xs font-medium text-slate-600 dark:text-slate-300">
+                          Kích thước
+                          <input value={variant.size} onChange={(event) => updateVariant("size", event.target.value)} placeholder="17 / Vừa" className="mt-1 h-9 w-full rounded-md border border-orange-100 px-2 text-sm dark:border-slate-700 dark:bg-slate-950" />
+                        </label>
+                        <label className="text-xs font-medium text-slate-600 dark:text-slate-300">
+                          Chiều dài
+                          <input value={variant.length} onChange={(event) => updateVariant("length", event.target.value)} placeholder="45 cm" className="mt-1 h-9 w-full rounded-md border border-orange-100 px-2 text-sm dark:border-slate-700 dark:bg-slate-950" />
+                        </label>
+                        <label className="text-xs font-medium text-slate-600 dark:text-slate-300">
+                          Loại vàng
+                          <input value={variant.gold_type} onChange={(event) => updateVariant("gold_type", event.target.value)} placeholder="Vàng trắng 14K" className="mt-1 h-9 w-full rounded-md border border-orange-100 px-2 text-sm dark:border-slate-700 dark:bg-slate-950" />
+                        </label>
+                        <label className="text-xs font-medium text-slate-600 dark:text-slate-300">
+                          Giá
+                          <input type="number" min={0} value={variant.price} onChange={(event) => updateVariant("price", event.target.value)} className="mt-1 h-9 w-full rounded-md border border-orange-100 px-2 text-sm dark:border-slate-700 dark:bg-slate-950" />
+                        </label>
+                        <label className="text-xs font-medium text-slate-600 dark:text-slate-300">
+                          Tồn kho
+                          <input type="number" min={0} value={variant.stock} onChange={(event) => updateVariant("stock", event.target.value)} className="mt-1 h-9 w-full rounded-md border border-orange-100 px-2 text-sm dark:border-slate-700 dark:bg-slate-950" />
+                        </label>
+                        <div className="flex items-end gap-2">
+                          <label className="flex h-9 items-center gap-2 rounded-md border border-orange-100 px-2 text-xs dark:border-slate-700">
+                            <input type="checkbox" checked={variant.is_active} onChange={(event) => updateVariant("is_active", event.target.checked)} className="accent-orange-500" /> Bán
+                          </label>
+                          <button
+                            type="button"
+                            aria-label="Bỏ biến thể"
+                            onClick={() => setProductForm((current) => ({ ...current, variants: current.variants.filter((_, itemIndex) => itemIndex !== index) }))}
+                            className="grid h-9 w-9 place-items-center rounded-md border border-rose-100 text-rose-600 transition hover:bg-rose-50 dark:border-rose-500/30 dark:text-rose-300"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                  <p className="text-xs text-slate-500 dark:text-slate-400">Khi lưu, giá hiển thị sẽ là giá biến thể thấp nhất và tồn kho chung là tổng tồn kho các biến thể đang bán.</p>
+                </div>
+              )}
+            </section>
 
             <div className="sticky bottom-0 -mx-4 -mb-4 grid grid-cols-2 gap-2 border-t border-orange-100 bg-white/95 px-4 py-3 backdrop-blur dark:border-slate-700 dark:bg-slate-900/95 sm:-mx-5 sm:-mb-5 sm:flex sm:justify-end sm:px-5">
               <button

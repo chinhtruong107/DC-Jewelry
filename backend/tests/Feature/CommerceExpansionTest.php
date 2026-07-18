@@ -6,6 +6,7 @@ use App\Models\Order;
 use App\Models\Product;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Schema;
 use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
@@ -84,6 +85,18 @@ class CommerceExpansionTest extends TestCase
             'items' => [['id' => $product->id, 'quantity' => 1]],
             'payment_method' => 'momo',
         ])->assertUnprocessable()->assertJsonValidationErrors('payment_method');
+    }
+
+    public function test_shipping_and_warranty_migration_can_be_reapplied_safely(): void
+    {
+        $migration = require database_path('migrations/2026_07_18_000002_add_shipping_and_warranty_fields.php');
+
+        $migration->up();
+
+        $this->assertTrue(Schema::hasColumn('products', 'warranty_months'));
+        $this->assertTrue(Schema::hasColumn('orders', 'tracking_number'));
+        $this->assertTrue(Schema::hasColumn('order_items', 'certificate_code'));
+        $this->assertTrue(Schema::hasTable('shipment_events'));
     }
 
     private function product(): Product

@@ -5,6 +5,13 @@ if [ ! -f .env ]; then
     cp .env.example .env
 fi
 
+mkdir -p \
+    storage/framework/cache/data \
+    storage/framework/sessions \
+    storage/framework/testing \
+    storage/framework/views \
+    storage/logs
+
 if ! grep -q '^APP_KEY=base64:' .env 2>/dev/null && [ -z "$APP_KEY" ]; then
     php artisan key:generate --force
 fi

@@ -102,8 +102,7 @@ class AdminController extends Controller
         Order $order,
         DemoShippingService $shipping,
         ResendEmailService $email
-    )
-    {
+    ) {
         $validated = $request->validate([
             'status' => ['required', 'string', 'in:pending,processing,shipping,completed,cancelled'],
             'payment_status' => ['sometimes', 'string', 'in:unpaid,paid,refunded'],

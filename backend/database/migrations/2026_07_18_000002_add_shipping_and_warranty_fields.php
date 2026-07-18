@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
@@ -45,7 +46,7 @@ return new class extends Migration
             ->select('order_items.id', 'orders.order_number', 'orders.created_at')
             ->orderBy('order_items.id')
             ->each(function ($item) {
-                $start = \Illuminate\Support\Carbon::parse($item->created_at);
+                $start = Carbon::parse($item->created_at);
                 $code = 'DCJ-'.strtoupper(substr(hash('sha256', $item->order_number.'-'.$item->id), 0, 12));
 
                 DB::table('order_items')->where('id', $item->id)->update([

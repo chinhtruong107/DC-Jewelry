@@ -54,12 +54,17 @@ fwrite(STDERR, "Database is not ready after 60 seconds.\n");
 exit(1);
 '
 
-php artisan migrate --force
-php artisan db:seed --class=VietnameseAdministrativeUnitSeeder --force
-php artisan db:seed --class=AdminUserSeeder --force
+if [ "${RUN_STARTUP_MIGRATIONS:-false}" = "true" ]; then
+    echo "Running Laravel startup migrations and seeders..."
+    php artisan migrate --force
+    php artisan db:seed --class=VietnameseAdministrativeUnitSeeder --force
+    php artisan db:seed --class=AdminUserSeeder --force
 
-if [ "${RUN_SEEDERS:-false}" = "true" ]; then
-    php artisan db:seed --force
+    if [ "${RUN_SEEDERS:-false}" = "true" ]; then
+        php artisan db:seed --force
+    fi
+else
+    echo "Skipping startup migrations; deployment automation will run them."
 fi
 
 exec "$@"

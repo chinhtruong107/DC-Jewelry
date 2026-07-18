@@ -10,6 +10,7 @@ services:
       APP_ENV: local
       APP_DEBUG: "true"
       APP_URL: http://localhost:8002
+      RUN_STARTUP_MIGRATIONS: "${RUN_STARTUP_MIGRATIONS:-false}"
       RUN_SEEDERS: "${RUN_SEEDERS:-false}"
       RESEND_API_KEY: "${RESEND_API_KEY:-}"
       RESEND_FROM_ADDRESS: "${RESEND_FROM_ADDRESS:-Duc Chinh Jewelry <onboarding@resend.dev>}"

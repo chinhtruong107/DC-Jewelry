@@ -5,6 +5,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import SiteShell from "@/components/layout/SiteShell";
+import { LanguageProvider } from "@/context/LanguageContext";
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "https://dcjewelry.duckdns.org"),
@@ -41,13 +42,15 @@ export default function RootLayout({
           forcedTheme="light"
           enableSystem={false}
         >
-          <AuthProvider>
-            <FavoritesProvider>
-              <CartProvider>
-                <SiteShell>{children}</SiteShell>
-              </CartProvider>
-            </FavoritesProvider>
-          </AuthProvider>
+          <LanguageProvider>
+            <AuthProvider>
+              <FavoritesProvider>
+                <CartProvider>
+                  <SiteShell>{children}</SiteShell>
+                </CartProvider>
+              </FavoritesProvider>
+            </AuthProvider>
+          </LanguageProvider>
         </ThemeProvider>
       </body>
     </html>

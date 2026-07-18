@@ -15,6 +15,9 @@ backend/storage/logs/*.log
 
 # Laravel runtime and PHPUnit artifacts
 backend/.phpunit.result.cache
-backend/storage/framework/cache/data/
-backend/storage/framework/sessions/
-backend/storage/framework/views/
+backend/storage/framework/cache/data/*
+!backend/storage/framework/cache/data/.gitkeep
+backend/storage/framework/sessions/*
+!backend/storage/framework/sessions/.gitkeep
+backend/storage/framework/views/*
+!backend/storage/framework/views/.gitkeep

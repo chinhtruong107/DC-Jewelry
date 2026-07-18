@@ -513,9 +513,12 @@ body::before {
 .dc-admin-redesign [class*="text-[#f7efe1]"],
 .dc-admin-redesign .text-slate-950,
 .dc-admin-redesign .text-slate-900,
-.dc-admin-redesign .text-zinc-950,
-.dc-admin-redesign .text-white {
+.dc-admin-redesign .text-zinc-950 {
   color: #28171a !important;
+}
+
+.dc-admin-redesign .text-white {
+  color: #fffaf2 !important;
 }
 
 .dc-admin-redesign [class*="text-[#cfc4ad]"],
@@ -586,6 +589,16 @@ body::before {
 
 .dc-admin-redesign button:hover {
   border-color: rgba(122, 33, 48, 0.4);
+}
+
+.dc-admin-redesign button:focus-visible,
+.dc-admin-redesign a:focus-visible {
+  outline: 2px solid #7a2130;
+  outline-offset: 3px;
+}
+
+.dc-admin-redesign button:disabled {
+  cursor: not-allowed;
 }
 
 @media (prefers-reduced-motion: reduce) {

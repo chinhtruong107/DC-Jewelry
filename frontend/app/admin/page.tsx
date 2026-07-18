@@ -489,7 +489,10 @@ export default function AdminPage() {
 
     try {
       const payload = await productPayload();
-      if (!payload.name || !payload.category || Number.isNaN(payload.price) || Number.isNaN(payload.stock) || payload.warranty_months < 1 || payload.warranty_months > 120) {
+      const invalidVariant = payload.variants.some((variant) =>
+        Number.isNaN(variant.price) || variant.price < 0 || Number.isNaN(variant.stock) || variant.stock < 0
+      );
+      if (!payload.name || !payload.category || Number.isNaN(payload.price) || Number.isNaN(payload.stock) || payload.warranty_months < 1 || payload.warranty_months > 120 || invalidVariant) {
         setProductError("Vui lòng nhập đầy đủ tên, danh mục, giá và tồn kho.");
         return;
       }

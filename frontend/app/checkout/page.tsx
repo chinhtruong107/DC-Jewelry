@@ -5,7 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useAuth } from "@/context/AuthContext";
 import { useCart } from "@/context/CartContext";
 import { useLanguage } from "@/context/LanguageContext";
-import { productName } from "@/lib/productLocale";
+import { localizedVariantSnapshot, productName } from "@/lib/productLocale";
 import {
   buildFullAddress,
   fetchProvinces,
@@ -367,7 +367,8 @@ export default function CheckoutPage() {
       const data = await response.json();
 
       if (!response.ok) {
-        setSubmitError(data.message || "Không thể tạo đơn hàng. Vui lòng thử lại.");
+        const validationMessage = data.errors ? Object.values(data.errors as Record<string, string[]>).flat()[0] : null;
+        setSubmitError(validationMessage || data.message || "Không thể tạo đơn hàng. Vui lòng thử lại.");
         return;
       }
 
@@ -669,7 +670,7 @@ export default function CheckoutPage() {
                     </div>
                     <div className="min-w-0">
                       <h3 className="truncate text-sm font-semibold text-[#28171a]">{fixVietnameseText(productName(item, language))}</h3>
-                      {item.variant_label && <p className="mt-1 truncate text-[10px] font-semibold uppercase tracking-[0.1em] text-[#7a2130]">{item.variant_label}</p>}
+                      {item.variant_label && <p className="mt-1 truncate text-[10px] font-semibold uppercase tracking-[0.1em] text-[#7a2130]">{localizedVariantSnapshot(item.variant_label, language)}</p>}
                       <p className="mt-1 text-xs text-[#756568]">Số lượng: {item.quantity}</p>
                     </div>
                     <p className="text-right text-sm font-semibold text-[#28171a]">

@@ -72,6 +72,7 @@ class RecommendationController extends Controller
             ->pluck('sold', 'product_id');
 
         $products = Product::query()
+            ->with(['variants' => fn ($query) => $query->where('is_active', true)->orderBy('sort_order')])
             ->where('status', 'active')
             ->where('stock', '>', 0)
             ->when($exclude->isNotEmpty(), fn ($query) => $query->whereNotIn('id', $exclude->unique()))

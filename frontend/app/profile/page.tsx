@@ -7,6 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from "@/context/AuthContext";
 import { useFavorites } from "@/context/FavoritesContext";
+import { useLanguage } from "@/context/LanguageContext";
+import { localizedVariantSnapshot } from "@/lib/productLocale";
 import {
   buildFullAddress,
   fetchProvinces,
@@ -46,6 +48,7 @@ interface OrderItem {
   id: number;
   orderItemId?: number;
   name: string;
+  variantLabel?: string | null;
   image: string;
   price: number;
   quantity: number;
@@ -78,6 +81,8 @@ interface ApiOrderItem {
   id: number;
   product_id: number | null;
   product_name: string;
+  product_name_en?: string | null;
+  variant_label?: string | null;
   product_image: string | null;
   price: number;
   quantity: number;
@@ -157,7 +162,7 @@ function getStatusStyle(status: Exclude<OrderStatus, "Tất cả">) {
   return "border-[#d6bd7a]/30 bg-[#d6bd7a]/12 text-[#f7e4ac]";
 }
 
-function mapApiOrder(order: ApiOrder): Order {
+function mapApiOrder(order: ApiOrder, language: "vi" | "en"): Order {
   return {
     databaseId: order.id,
     id: order.order_number,
@@ -177,7 +182,8 @@ function mapApiOrder(order: ApiOrder): Order {
     items: order.items.map((item) => ({
       id: item.product_id ?? item.id,
       orderItemId: item.id,
-      name: item.product_name,
+      name: language === "en" && item.product_name_en ? item.product_name_en : item.product_name,
+      variantLabel: item.variant_label,
       image: item.product_image || "/images/NoImage.jpg",
       price: item.price,
       quantity: item.quantity,
@@ -192,6 +198,7 @@ function mapApiOrder(order: ApiOrder): Order {
 export default function ProfilePage() {
   const { user, token, updateUser } = useAuth();
   const { favorites } = useFavorites();
+  const { language } = useLanguage();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<"info" | "orders" | "favorites">("info");
   const [orderFilter, setOrderFilter] = useState<OrderStatus>("Tất cả");
@@ -295,7 +302,7 @@ export default function ProfilePage() {
           return;
         }
 
-        setOrders(data.map(mapApiOrder));
+        setOrders(data.map((order: ApiOrder) => mapApiOrder(order, language)));
       } catch {
         if (!controller.signal.aborted) {
           setOrdersError("Không kết nối được tới máy chủ.");
@@ -310,7 +317,7 @@ export default function ProfilePage() {
     fetchOrders();
 
     return () => controller.abort();
-  }, [token]);
+  }, [language, token]);
 
   const handleSaveInfo = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -392,7 +399,7 @@ export default function ProfilePage() {
         return;
       }
 
-      const cancelledOrder = mapApiOrder(data);
+      const cancelledOrder = mapApiOrder(data, language);
       setOrders((currentOrders) =>
         currentOrders.map((currentOrder) =>
           currentOrder.databaseId === cancelledOrder.databaseId ? cancelledOrder : currentOrder
@@ -789,6 +796,7 @@ export default function ProfilePage() {
                                     />
                                     <div className="min-w-0">
                                       <p className="font-medium text-[#f7efe1]">{item.name}</p>
+                                      {item.variantLabel && <p className="mt-1 text-xs font-semibold uppercase tracking-[0.1em] text-[#d6bd7a]">{localizedVariantSnapshot(item.variantLabel, language)}</p>}
                                       <p className="mt-1 text-sm text-[#cfc4ad]/70">
                                         Số lượng: {item.quantity} - Đơn giá: {formatVND(item.price)}
                                       </p>

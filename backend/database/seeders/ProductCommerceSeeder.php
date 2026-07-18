@@ -12,21 +12,21 @@ class ProductCommerceSeeder extends Seeder
     public function run(): void
     {
         Product::query()->orderBy('id')->each(function (Product $product) {
-            $stocks = $this->splitStock(max(3, (int) $product->stock));
+            if (! $product->variants()->exists()) {
+                $stocks = $this->splitStock(max(3, (int) $product->stock));
 
-            foreach ($this->optionsFor($product) as $index => $options) {
-                $price = (int) round($product->price * [1, 1.08, 1.15][$index] / 1000) * 1000;
+                foreach ($this->optionsFor($product) as $index => $options) {
+                    $price = (int) round($product->price * [1, 1.08, 1.15][$index] / 1000) * 1000;
 
-                $product->variants()->updateOrCreate(
-                    ['sku' => 'DCJ-'.str_pad((string) $product->id, 3, '0', STR_PAD_LEFT).'-V'.($index + 1)],
-                    [
+                    $product->variants()->create([
+                        'sku' => 'DCJ-'.str_pad((string) $product->id, 3, '0', STR_PAD_LEFT).'-V'.($index + 1),
                         ...$options,
                         'price' => $price,
                         'stock' => $stocks[$index],
                         'is_active' => true,
                         'sort_order' => $index,
-                    ]
-                );
+                    ]);
+                }
             }
 
             $product->update([
@@ -120,16 +120,18 @@ class ProductCommerceSeeder extends Seeder
         ];
 
         foreach ($coupons as $coupon) {
-            Coupon::updateOrCreate(
-                ['code' => $coupon['code']],
-                [
-                    ...$coupon,
-                    'usage_count' => 0,
-                    'starts_at' => now()->subDay(),
-                    'expires_at' => now()->addYear(),
-                    'is_active' => true,
-                ]
-            );
+            $model = Coupon::firstOrNew(['code' => $coupon['code']]);
+
+            if (! $model->exists) {
+                $model->usage_count = 0;
+            }
+
+            $model->fill([
+                ...$coupon,
+                'starts_at' => $model->starts_at ?? now()->subDay(),
+                'expires_at' => $model->expires_at ?? now()->addYear(),
+                'is_active' => $model->exists ? $model->is_active : true,
+            ])->save();
         }
     }
 }

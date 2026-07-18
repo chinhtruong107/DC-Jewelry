@@ -35,8 +35,7 @@ class OrderController extends Controller
         VnpayService $vnpay,
         ResendEmailService $email,
         CouponService $coupons
-    )
-    {
+    ) {
         $user = $this->resolveUser($request);
 
         $validated = $request->validate([

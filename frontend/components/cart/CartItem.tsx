@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useCart } from "@/context/CartContext";
 import type { CartItem as CartItemType } from "@/context/CartContext";
 import { useLanguage } from "@/context/LanguageContext";
-import { productName } from "@/lib/productLocale";
+import { localizedVariantSnapshot, productName } from "@/lib/productLocale";
 import { formatVND, productImageUrl } from "@/lib/utils";
 import { Minus, Plus, Trash2 } from "lucide-react";
 import Image from "next/image";
@@ -22,15 +22,7 @@ export default function CartItem({ item, isLast }: CartItemProps) {
   const isAtMaxStock = item.quantity >= stock;
   const [isMutating, setIsMutating] = useState(false);
   const displayName = productName(item, language);
-  const displayVariant = language === "en"
-    ? item.variant_label
-      ?.replace("Vàng trắng", "White gold")
-      .replace("Vàng hồng", "Rose gold")
-      .replace("Vàng vàng", "Yellow gold")
-      .replace("Nhỏ", "Small")
-      .replace("Vừa", "Medium")
-      .replace("Lớn", "Large")
-    : item.variant_label;
+  const displayVariant = item.variant_label ? localizedVariantSnapshot(item.variant_label, language) : null;
   const mutate = async (action: () => Promise<void>) => {
     if (isMutating) return;
     setIsMutating(true);

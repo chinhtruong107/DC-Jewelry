@@ -212,6 +212,14 @@ const translationPairs: TranslationPair[] = [
   ["Mở chatbot tư vấn", "Open consultation chat"],
   ["Thu nhỏ chatbot", "Minimize chat"],
   ["Đóng chatbot", "Close chat"],
+  ["Phiên bản sản phẩm", "Product variant"],
+  ["Chọn phiên bản", "Choose options"],
+  ["Mã giảm giá", "Promo code"],
+  ["Áp dụng", "Apply"],
+  ["Đang kiểm tra", "Checking"],
+  ["Vui lòng nhập mã giảm giá.", "Please enter a promo code."],
+  ["Mã giảm giá không hợp lệ.", "This promo code is invalid."],
+  ["Không thể kiểm tra mã giảm giá.", "Could not validate the promo code."],
 ];
 
 const vietnameseToEnglish = new Map(translationPairs);
@@ -226,6 +234,8 @@ function translateDynamic(value: string, language: Language): string {
       .replace(/Tạm tính \((\d+) sản phẩm\)/gi, "Subtotal ($1 items)")
       .replace(/Còn (\d+) sản phẩm/gi, "$1 items in stock")
       .replace(/Bảo hành (\d+) tháng/gi, "$1-month warranty")
+      .replace(/Đã áp dụng ([A-Z0-9-]+)/g, "$1 applied")
+      .replace(/^Mã ([A-Z0-9-]+)$/g, "Code $1")
       .replace(/^(.+) \/ 5 từ (\d+) đánh giá$/gi, "$1 / 5 from $2 reviews")
       .replace(/(\d+) đánh giá/gi, "$1 reviews")
       .replace(/Chuyển đến ảnh banner (\d+)/gi, "Go to banner image $1")
@@ -243,6 +253,8 @@ function translateDynamic(value: string, language: Language): string {
     .replace(/Subtotal \((\d+) items\)/gi, "Tạm tính ($1 sản phẩm)")
     .replace(/(\d+) items in stock/gi, "Còn $1 sản phẩm")
     .replace(/(\d+)-month warranty/gi, "Bảo hành $1 tháng")
+    .replace(/^([A-Z0-9-]+) applied$/g, "Đã áp dụng $1")
+    .replace(/^Code ([A-Z0-9-]+)$/g, "Mã $1")
     .replace(/^(.+) \/ 5 from (\d+) reviews$/gi, "$1 / 5 từ $2 đánh giá")
     .replace(/(\d+) reviews/gi, "$1 đánh giá")
     .replace(/Go to banner image (\d+)/gi, "Chuyển đến ảnh banner $1")

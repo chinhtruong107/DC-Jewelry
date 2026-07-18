@@ -10,7 +10,10 @@ class FavoriteController extends Controller
     public function index(Request $request)
     {
         return response()->json(
-            $request->user()->favoriteProducts()->latest('favorite_products.created_at')->get()
+            $request->user()->favoriteProducts()
+                ->with(['variants' => fn ($query) => $query->where('is_active', true)->orderBy('sort_order')])
+                ->latest('favorite_products.created_at')
+                ->get()
         );
     }
 
@@ -20,7 +23,7 @@ class FavoriteController extends Controller
 
         return response()->json([
             'message' => 'Added to favorites',
-            'product' => $product,
+            'product' => $product->load(['variants' => fn ($query) => $query->where('is_active', true)->orderBy('sort_order')]),
         ], 201);
     }
 

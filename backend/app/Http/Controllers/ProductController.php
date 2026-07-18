@@ -188,16 +188,12 @@ class ProductController extends Controller
                 $sku = 'DCJ-'.$product->id.'-V'.str_pad((string) ($index + 1), 2, '0', STR_PAD_LEFT);
             }
 
-            $skuExists = $product->variants()
-                ->where('sku', $sku)
-                ->when($variant, fn ($query) => $query->whereKeyNot($variant->id))
-                ->exists();
             $globalSkuExists = DB::table('product_variants')
                 ->where('sku', $sku)
                 ->when($variant, fn ($query) => $query->where('id', '!=', $variant->id))
                 ->exists();
 
-            if ($skuExists || $globalSkuExists) {
+            if ($globalSkuExists) {
                 throw ValidationException::withMessages([
                     "variants.{$index}.sku" => ["SKU {$sku} đã được sử dụng."],
                 ]);

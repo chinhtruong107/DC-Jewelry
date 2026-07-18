@@ -15,12 +15,18 @@ export function variantLabel(variant: ProductVariant, language: Language) {
   if (language === "vi") return values.join(" · ") || variant.sku;
 
   return values
-    .map((value) => value
-      .replace("Vàng trắng", "White gold")
-      .replace("Vàng hồng", "Rose gold")
-      .replace("Vàng vàng", "Yellow gold")
-      .replace("Nhỏ", "Small")
-      .replace("Vừa", "Medium")
-      .replace("Lớn", "Large"))
+    .map((value) => localizedVariantSnapshot(value, language))
     .join(" · ") || variant.sku;
+}
+
+export function localizedVariantSnapshot(value: string, language: Language) {
+  if (language === "vi") return value;
+
+  return value
+    .replace("Vàng trắng", "White gold")
+    .replace("Vàng hồng", "Rose gold")
+    .replace("Vàng vàng", "Yellow gold")
+    .replace("Nhỏ", "Small")
+    .replace("Vừa", "Medium")
+    .replace("Lớn", "Large");
 }

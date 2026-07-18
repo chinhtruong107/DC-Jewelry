@@ -9,6 +9,8 @@ import ProductFilterSidebar, {
 import { Product } from "@/types/product";
 import Link from "next/link";
 import { SearchX } from "lucide-react";
+import { useLanguage } from "@/context/LanguageContext";
+import { productName } from "@/lib/productLocale";
 
 interface CategoryProductBrowserProps {
   products: Product[];
@@ -18,7 +20,7 @@ interface CategoryProductBrowserProps {
 function productMatchesGoldKarats(product: Product, goldKarats: ProductFilters["goldKarats"]) {
   if (goldKarats.length === 0) return true;
 
-  const searchableText = [product.name, product.description, product.category]
+  const searchableText = [product.name, product.name_en, product.description, product.description_en, product.category]
     .filter(Boolean)
     .join(" ")
     .toLowerCase();
@@ -36,6 +38,7 @@ export default function CategoryProductBrowser({
   categoryName,
 }: CategoryProductBrowserProps) {
   const [filters, setFilters] = useState<ProductFilters>(defaultProductFilters);
+  const { language } = useLanguage();
 
   const filteredProducts = useMemo(() => {
     const nextProducts = products.filter((product) => {
@@ -51,10 +54,10 @@ export default function CategoryProductBrowser({
     return [...nextProducts].sort((a, b) => {
       if (filters.sort === "price-asc") return a.price - b.price;
       if (filters.sort === "price-desc") return b.price - a.price;
-      if (filters.sort === "name-asc") return a.name.localeCompare(b.name, "vi");
+      if (filters.sort === "name-asc") return productName(a, language).localeCompare(productName(b, language), language);
       return Number(Boolean(b.isBestSeller || b.is_best_seller)) - Number(Boolean(a.isBestSeller || a.is_best_seller));
     });
-  }, [filters, products]);
+  }, [filters, language, products]);
 
   return (
     <div className="mt-8 flex flex-col gap-8 lg:flex-row">

@@ -64,6 +64,8 @@ DB_PASSWORD=your-database-password
 RESEND_API_KEY=
 RESEND_FROM_ADDRESS="Duc Chinh Jewelry <onboarding@resend.dev>"
 CONTACT_NOTIFICATION_EMAIL=hello@ducchinhjewelry.vn
+ADMIN_NOTIFICATION_EMAIL=ct8395459@gmail.com
+LOW_STOCK_THRESHOLD=10
 
 VNPAY_TMN_CODE=
 VNPAY_HASH_SECRET=

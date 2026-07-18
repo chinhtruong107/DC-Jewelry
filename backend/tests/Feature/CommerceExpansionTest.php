@@ -6,6 +6,8 @@ use App\Models\Order;
 use App\Models\Product;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Schema;
 use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
@@ -38,6 +40,11 @@ class CommerceExpansionTest extends TestCase
 
     public function test_admin_can_create_demo_shipment_and_customer_can_request_return(): void
     {
+        Config::set('services.resend.key', 're_test_key');
+        Config::set('services.resend.from', 'Duc Chinh Jewelry <hello@example.com>');
+        Config::set('services.resend.admin_to', 'ct8395459@gmail.com');
+        Http::fake(['api.resend.com/emails' => Http::response(['id' => 'email_123'], 200)]);
+
         $customer = User::factory()->create(['role' => 'customer', 'must_change_password' => false]);
         $admin = User::factory()->create(['role' => 'admin', 'must_change_password' => false]);
         $product = $this->product();
@@ -68,12 +75,55 @@ class CommerceExpansionTest extends TestCase
         $this->getJson('/api/certificates/'.$order->items->first()->certificate_code)
             ->assertOk()
             ->assertJsonPath('warranty_months', 12);
-        $this->postJson('/api/return-requests', [
+        $returnRequest = $this->postJson('/api/return-requests', [
             'order_id' => $order->id,
             'order_item_id' => $order->items->first()->id,
             'type' => 'return',
             'reason' => 'Sản phẩm không vừa kích thước.',
         ])->assertCreated()->assertJsonPath('status', 'pending');
+
+        Http::assertSent(function ($request) use ($returnRequest) {
+            $payload = $request->data();
+
+            return $payload['to'] === ['ct8395459@gmail.com']
+                && str_contains($payload['subject'], $returnRequest->json('request_number'))
+                && str_contains($payload['subject'], 'Yêu cầu Trả hàng mới');
+        });
+    }
+
+    public function test_admin_receives_new_order_and_low_stock_notifications(): void
+    {
+        Config::set('services.resend.key', 're_test_key');
+        Config::set('services.resend.from', 'Duc Chinh Jewelry <hello@example.com>');
+        Config::set('services.resend.admin_to', 'ct8395459@gmail.com');
+        Config::set('services.resend.low_stock_threshold', 10);
+        Http::fake(['api.resend.com/emails' => Http::response(['id' => 'email_123'], 200)]);
+
+        $product = $this->product();
+        $product->update(['stock' => 11]);
+
+        $orderNumber = $this->postJson('/api/orders', [
+            'customer' => ['name' => 'Khách thử', 'email' => 'guest@example.com', 'phone' => '0389794445', 'address' => 'Hà Nội'],
+            'items' => [['id' => $product->id, 'quantity' => 1]],
+            'payment_method' => 'cod',
+        ])->assertCreated()->json('order_number');
+
+        Http::assertSentCount(2);
+        Http::assertSent(function ($request) use ($orderNumber) {
+            $payload = $request->data();
+
+            return $payload['to'] === ['ct8395459@gmail.com']
+                && str_contains($payload['subject'], $orderNumber)
+                && str_contains($payload['subject'], 'Đơn hàng mới');
+        });
+        Http::assertSent(function ($request) use ($product) {
+            $payload = $request->data();
+
+            return $payload['to'] === ['ct8395459@gmail.com']
+                && str_contains($payload['subject'], 'Cảnh báo tồn kho')
+                && str_contains($payload['text'], $product->name)
+                && str_contains($payload['text'], 'còn 10');
+        });
     }
 
     public function test_momo_is_no_longer_accepted_at_checkout(): void

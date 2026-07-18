@@ -67,9 +67,12 @@ class OrderController extends Controller
             ], 422);
         }
 
-        $order = DB::transaction(function () use ($user, $validated, $coupons) {
+        $lowStockThreshold = max(0, (int) config('services.resend.low_stock_threshold', 10));
+        $lowStockAlerts = [];
+
+        $order = DB::transaction(function () use ($user, $validated, $coupons, $lowStockThreshold, &$lowStockAlerts) {
             $subtotal = 0;
-            $items = collect($validated['items'])->map(function ($item) use (&$subtotal) {
+            $items = collect($validated['items'])->map(function ($item) use (&$subtotal, $lowStockThreshold, &$lowStockAlerts) {
                 $product = Product::whereKey($item['id'])->lockForUpdate()->firstOrFail();
                 $quantity = (int) $item['quantity'];
                 $variant = isset($item['variant_id'])
@@ -102,6 +105,17 @@ class OrderController extends Controller
                 $price = (int) ($variant?->price ?? $product->price);
                 $lineTotal = $price * $quantity;
                 $subtotal += $lineTotal;
+                $remainingStock = $availableStock - $quantity;
+
+                if ($availableStock > $lowStockThreshold && $remainingStock <= $lowStockThreshold) {
+                    $lowStockAlerts[] = [
+                        'product_name' => $product->name,
+                        'variant_label' => $variant?->label,
+                        'sku' => $variant?->sku,
+                        'remaining_stock' => $remainingStock,
+                    ];
+                }
+
                 $product->decrement('stock', $quantity);
                 $variant?->decrement('stock', $quantity);
                 $warrantyStartsAt = now();
@@ -196,6 +210,8 @@ class OrderController extends Controller
 
         CartController::clearForRequest($request, $user);
         $this->sendOrderEmail($email, $order);
+        $this->sendAdminOrderEmail($email, $order);
+        $this->sendLowStockEmail($email, $order, $lowStockAlerts);
 
         if ($order->payment_method === 'vnpay') {
             return response()->json([
@@ -307,6 +323,30 @@ class OrderController extends Controller
             $email->sendOrderStatusNotification($order);
         } catch (\Throwable $exception) {
             Log::warning('Order email could not be sent.', [
+                'order_id' => $order->id,
+                'message' => $exception->getMessage(),
+            ]);
+        }
+    }
+
+    private function sendAdminOrderEmail(ResendEmailService $email, Order $order): void
+    {
+        try {
+            $email->sendNewOrderAdminNotification($order);
+        } catch (\Throwable $exception) {
+            Log::warning('Admin new order email could not be sent.', [
+                'order_id' => $order->id,
+                'message' => $exception->getMessage(),
+            ]);
+        }
+    }
+
+    private function sendLowStockEmail(ResendEmailService $email, Order $order, array $alerts): void
+    {
+        try {
+            $email->sendLowStockAdminNotification($alerts);
+        } catch (\Throwable $exception) {
+            Log::warning('Admin low stock email could not be sent.', [
                 'order_id' => $order->id,
                 'message' => $exception->getMessage(),
             ]);

@@ -25,6 +25,13 @@ class ResendEmailService
             && filled(config('services.resend.contact_to'));
     }
 
+    public function canSendAdminNotification(): bool
+    {
+        return filled(config('services.resend.key'))
+            && filled(config('services.resend.from'))
+            && filled(config('services.resend.admin_to'));
+    }
+
     public function sendTemporaryPassword(string $to, string $name, string $temporaryPassword): void
     {
         $apiKey = config('services.resend.key');
@@ -151,6 +158,160 @@ class ResendEmailService
                 HTML,
             'text' => "Đơn hàng {$order->order_number}: {$statusLabel}\nMã vận đơn: ".($order->tracking_number ?: 'Chưa có')."\nTổng thanh toán: {$total}",
         ]);
+    }
+
+    public function sendNewOrderAdminNotification(Order $order): void
+    {
+        if (! $this->canSendAdminNotification()) {
+            return;
+        }
+
+        $order->loadMissing('items');
+        $safeOrderNumber = e($order->order_number);
+        $safeCustomerName = e($order->customer_name);
+        $safeCustomerEmail = e($order->customer_email);
+        $safeCustomerPhone = e($order->customer_phone);
+        $safeCustomerAddress = e($order->customer_address);
+        $paymentMethod = match ($order->payment_method) {
+            'vnpay' => 'VNPay',
+            default => 'Thanh toán khi nhận hàng (COD)',
+        };
+        $safePaymentMethod = e($paymentMethod);
+        $safeCoupon = e($order->coupon_code ?: 'Không sử dụng');
+        $itemsHtml = $order->items
+            ->map(function ($item) {
+                $variant = $item->variant_label ? ' · '.e($item->variant_label) : '';
+
+                return e($item->product_name).$variant.' × '.(int) $item->quantity
+                    .' — '.number_format((int) $item->line_total, 0, ',', '.').' đ';
+            })
+            ->implode('<br>');
+        $itemsText = $order->items
+            ->map(function ($item) {
+                $variant = $item->variant_label ? ' · '.$item->variant_label : '';
+
+                return $item->product_name.$variant.' x '.(int) $item->quantity;
+            })
+            ->implode("\n");
+        $total = number_format((int) $order->total, 0, ',', '.').' đ';
+
+        $payload = [
+            'from' => config('services.resend.from'),
+            'to' => [config('services.resend.admin_to')],
+            'subject' => "[{$order->order_number}] Đơn hàng mới - {$total}",
+            'html' => <<<HTML
+                <div style="font-family:Arial,sans-serif;line-height:1.65;color:#28171a;max-width:680px;margin:auto">
+                    <p style="font-size:12px;text-transform:uppercase;letter-spacing:2px;color:#7a2130">Đức Chính Jewelry · Đơn hàng mới</p>
+                    <h1 style="font-family:Georgia,serif;font-size:28px;font-weight:500">Đơn {$safeOrderNumber}</h1>
+                    <div style="padding:18px;background:#fff9ef;border-left:4px solid #d6bd7a">
+                        <p style="margin:0 0 8px"><strong>Khách hàng:</strong> {$safeCustomerName}</p>
+                        <p style="margin:0 0 8px"><strong>Email:</strong> {$safeCustomerEmail}</p>
+                        <p style="margin:0 0 8px"><strong>Điện thoại:</strong> {$safeCustomerPhone}</p>
+                        <p style="margin:0"><strong>Địa chỉ:</strong> {$safeCustomerAddress}</p>
+                    </div>
+                    <p><strong>Sản phẩm</strong><br>{$itemsHtml}</p>
+                    <p><strong>Thanh toán:</strong> {$safePaymentMethod}<br><strong>Mã giảm giá:</strong> {$safeCoupon}<br><strong>Tổng cộng:</strong> {$total}</p>
+                </div>
+                HTML,
+            'text' => "Đơn hàng mới {$order->order_number}\nKhách hàng: {$order->customer_name}\nEmail: {$order->customer_email}\nĐiện thoại: {$order->customer_phone}\nĐịa chỉ: {$order->customer_address}\n\n{$itemsText}\n\nThanh toán: {$paymentMethod}\nTổng cộng: {$total}",
+        ];
+
+        if ($order->customer_email) {
+            $payload['reply_to'] = $order->customer_email;
+        }
+
+        $this->send($payload);
+    }
+
+    public function sendLowStockAdminNotification(array $alerts): void
+    {
+        if (! $this->canSendAdminNotification() || $alerts === []) {
+            return;
+        }
+
+        $alerts = collect($alerts)->unique(fn (array $alert) => implode('|', [
+            $alert['product_name'],
+            $alert['sku'] ?? '',
+            $alert['variant_label'] ?? '',
+        ]))->values();
+        $itemsHtml = $alerts->map(function (array $alert) {
+            $variant = filled($alert['variant_label'] ?? null) ? ' · '.e($alert['variant_label']) : '';
+            $sku = filled($alert['sku'] ?? null) ? ' (SKU: '.e($alert['sku']).')' : '';
+
+            return '<li><strong>'.e($alert['product_name']).$variant.$sku
+                .'</strong>: còn '.(int) $alert['remaining_stock'].' sản phẩm</li>';
+        })->implode('');
+        $itemsText = $alerts->map(function (array $alert) {
+            $variant = filled($alert['variant_label'] ?? null) ? ' · '.$alert['variant_label'] : '';
+            $sku = filled($alert['sku'] ?? null) ? ' (SKU: '.$alert['sku'].')' : '';
+
+            return '- '.$alert['product_name'].$variant.$sku.': còn '.(int) $alert['remaining_stock'];
+        })->implode("\n");
+
+        $this->send([
+            'from' => config('services.resend.from'),
+            'to' => [config('services.resend.admin_to')],
+            'subject' => '[Cảnh báo tồn kho] '.$alerts->count().' sản phẩm sắp hết',
+            'html' => <<<HTML
+                <div style="font-family:Arial,sans-serif;line-height:1.65;color:#28171a;max-width:640px;margin:auto">
+                    <p style="font-size:12px;text-transform:uppercase;letter-spacing:2px;color:#7a2130">Đức Chính Jewelry · Tồn kho</p>
+                    <h1 style="font-family:Georgia,serif;font-size:28px;font-weight:500">Sản phẩm sắp hết</h1>
+                    <p>Các sản phẩm sau vừa chạm ngưỡng cảnh báo:</p>
+                    <ul style="padding:18px 18px 18px 36px;background:#fff9ef;border-left:4px solid #d6bd7a">{$itemsHtml}</ul>
+                    <p>Vui lòng kiểm tra và bổ sung tồn kho trong trang quản trị.</p>
+                </div>
+                HTML,
+            'text' => "Cảnh báo sản phẩm sắp hết\n\n{$itemsText}",
+        ]);
+    }
+
+    public function sendNewReturnRequestAdminNotification(ReturnRequest $returnRequest): void
+    {
+        if (! $this->canSendAdminNotification()) {
+            return;
+        }
+
+        $returnRequest->loadMissing(['user', 'order', 'orderItem']);
+        $typeLabels = [
+            'return' => 'Trả hàng',
+            'exchange' => 'Đổi hàng',
+            'warranty' => 'Bảo hành',
+        ];
+        $type = $typeLabels[$returnRequest->type] ?? $returnRequest->type;
+        $safeNumber = e($returnRequest->request_number);
+        $safeOrderNumber = e($returnRequest->order?->order_number ?: 'Không xác định');
+        $safeProduct = e($returnRequest->orderItem?->product_name ?: 'Sản phẩm');
+        $safeCustomer = e($returnRequest->user?->name ?: 'Khách hàng');
+        $safeEmail = e($returnRequest->user?->email ?: 'Không có');
+        $safePhone = e($returnRequest->user?->phone ?: 'Không có');
+        $safeReason = e($returnRequest->reason);
+        $safeDetails = nl2br(e($returnRequest->details ?: 'Không có thông tin bổ sung'));
+        $payload = [
+            'from' => config('services.resend.from'),
+            'to' => [config('services.resend.admin_to')],
+            'subject' => "[{$returnRequest->request_number}] Yêu cầu {$type} mới",
+            'html' => <<<HTML
+                <div style="font-family:Arial,sans-serif;line-height:1.65;color:#28171a;max-width:680px;margin:auto">
+                    <p style="font-size:12px;text-transform:uppercase;letter-spacing:2px;color:#7a2130">Đức Chính Jewelry · Hậu mãi</p>
+                    <h1 style="font-family:Georgia,serif;font-size:28px;font-weight:500">Yêu cầu {$type} mới</h1>
+                    <p><strong>Mã yêu cầu:</strong> {$safeNumber}<br><strong>Đơn hàng:</strong> {$safeOrderNumber}<br><strong>Sản phẩm:</strong> {$safeProduct}</p>
+                    <div style="padding:18px;background:#fff9ef;border-left:4px solid #d6bd7a">
+                        <p style="margin:0 0 8px"><strong>Khách hàng:</strong> {$safeCustomer}</p>
+                        <p style="margin:0 0 8px"><strong>Email:</strong> {$safeEmail}</p>
+                        <p style="margin:0"><strong>Điện thoại:</strong> {$safePhone}</p>
+                    </div>
+                    <p><strong>Lý do:</strong> {$safeReason}</p>
+                    <p><strong>Chi tiết:</strong><br>{$safeDetails}</p>
+                </div>
+                HTML,
+            'text' => "Yêu cầu {$type} mới {$returnRequest->request_number}\nĐơn hàng: ".($returnRequest->order?->order_number ?: 'Không xác định')."\nSản phẩm: ".($returnRequest->orderItem?->product_name ?: 'Sản phẩm')."\nKhách hàng: ".($returnRequest->user?->name ?: 'Khách hàng')."\nEmail: ".($returnRequest->user?->email ?: 'Không có')."\nĐiện thoại: ".($returnRequest->user?->phone ?: 'Không có')."\nLý do: {$returnRequest->reason}\nChi tiết: ".($returnRequest->details ?: 'Không có thông tin bổ sung'),
+        ];
+
+        if ($returnRequest->user?->email) {
+            $payload['reply_to'] = $returnRequest->user->email;
+        }
+
+        $this->send($payload);
     }
 
     public function sendReturnRequestNotification(ReturnRequest $returnRequest): void

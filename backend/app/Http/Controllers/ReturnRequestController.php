@@ -74,6 +74,7 @@ class ReturnRequestController extends Controller
         ]);
         $returnRequest->load(['order', 'orderItem', 'user']);
         $this->sendReturnEmail($email, $returnRequest);
+        $this->sendAdminReturnEmail($email, $returnRequest);
 
         return response()->json($returnRequest, 201);
     }
@@ -164,6 +165,18 @@ class ReturnRequestController extends Controller
             $email->sendReturnRequestNotification($returnRequest);
         } catch (\Throwable $exception) {
             Log::warning('Return request email could not be sent.', [
+                'return_request_id' => $returnRequest->id,
+                'message' => $exception->getMessage(),
+            ]);
+        }
+    }
+
+    private function sendAdminReturnEmail(ResendEmailService $email, ReturnRequest $returnRequest): void
+    {
+        try {
+            $email->sendNewReturnRequestAdminNotification($returnRequest);
+        } catch (\Throwable $exception) {
+            Log::warning('Admin return request email could not be sent.', [
                 'return_request_id' => $returnRequest->id,
                 'message' => $exception->getMessage(),
             ]);

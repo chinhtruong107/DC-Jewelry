@@ -35,6 +35,8 @@ return [
         'key' => env('RESEND_API_KEY'),
         'from' => env('RESEND_FROM_ADDRESS', env('MAIL_FROM_ADDRESS')),
         'contact_to' => env('CONTACT_NOTIFICATION_EMAIL'),
+        'admin_to' => env('ADMIN_NOTIFICATION_EMAIL', 'ct8395459@gmail.com'),
+        'low_stock_threshold' => (int) env('LOW_STOCK_THRESHOLD', 10),
     ],
 
     'vnpay' => [

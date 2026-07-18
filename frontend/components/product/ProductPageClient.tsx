@@ -6,10 +6,11 @@ import ProductNotFound from "@/components/product/ProductNotFound";
 import RelatedProducts from "@/components/product/RelatedProducts";
 import ShareProduct from "@/components/product/ShareProduct";
 import { useCart } from "@/context/CartContext";
+import { useAuth } from "@/context/AuthContext";
 import { useFavorites } from "@/context/FavoritesContext";
 import { cn, fixVietnameseText, formatVND, productImageUrl } from "@/lib/utils";
 import type { Product } from "@/types/product";
-import { Check, Heart, Minus, Plus, ShoppingBag, Star } from "lucide-react";
+import { Check, Heart, Minus, Plus, ShieldCheck, ShoppingBag, Star } from "lucide-react";
 import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
@@ -25,7 +26,8 @@ type ProductReview = {
 };
 
 export default function ProductPageClient() {
-  const { addToCart } = useCart();
+  const { addToCart, guestToken } = useCart();
+  const { token } = useAuth();
   const { toggleFavorite, isFavorite } = useFavorites();
   const { productId } = useParams();
   const router = useRouter();
@@ -36,6 +38,7 @@ export default function ProductPageClient() {
   const [justAdded, setJustAdded] = useState(false);
   const [reviews, setReviews] = useState<ProductReview[]>([]);
   const [isLoadingReviews, setIsLoadingReviews] = useState(true);
+  const [cartError, setCartError] = useState("");
 
   useEffect(() => {
     let isMounted = true;
@@ -59,6 +62,21 @@ export default function ProductPageClient() {
       isMounted = false;
     };
   }, [productId]);
+
+  useEffect(() => {
+    if (!product?.id || !guestToken) return;
+
+    fetch("/api/product-views", {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+        "X-Cart-Token": guestToken,
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify({ product_id: product.id }),
+    }).catch(() => undefined);
+  }, [guestToken, product?.id, token]);
 
   useEffect(() => {
     let isMounted = true;
@@ -116,27 +134,30 @@ export default function ProductPageClient() {
     if (isOutOfStock) return;
 
     setIsAdding(true);
-    await new Promise((resolve) => setTimeout(resolve, 300));
-
-    for (let index = 0; index < quantity; index++) {
-      addToCart({
+    setCartError("");
+    try {
+      await addToCart({
         id: product.id,
         name: productName,
         price: product.price,
         image: imageUrl,
-        quantity: 1,
+        quantity,
         stock,
       });
+      setJustAdded(true);
+      setTimeout(() => setJustAdded(false), 2000);
+      return true;
+    } catch (error) {
+      setCartError(error instanceof Error ? error.message : "Không thể thêm vào giỏ hàng.");
+      return false;
+    } finally {
+      setIsAdding(false);
     }
-
-    setIsAdding(false);
-    setJustAdded(true);
-    setTimeout(() => setJustAdded(false), 2000);
   };
 
   const handleBuyNow = async () => {
-    await handleAddToCart();
-    if (!isOutOfStock) {
+    const added = await handleAddToCart();
+    if (added) {
       setTimeout(() => router.push("/cart"), 300);
     }
   };
@@ -218,6 +239,9 @@ export default function ProductPageClient() {
               >
                 {isOutOfStock ? "Hết hàng" : `Còn ${stock} sản phẩm`}
               </span>
+              <span className="inline-flex items-center gap-2 border border-[#d6bd7a]/45 bg-[#d6bd7a]/10 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.16em] text-[#7a2130]">
+                <ShieldCheck className="h-4 w-4" /> Bảo hành {product.warranty_months || 12} tháng
+              </span>
             </div>
 
             <p className="mt-7 max-w-2xl text-base leading-8 text-[#756568]">{productDescription}</p>
@@ -296,6 +320,12 @@ export default function ProductPageClient() {
                   Mua ngay
                 </button>
               </div>
+
+              {cartError && (
+                <p className="border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700" role="alert">
+                  {cartError}
+                </p>
+              )}
 
               <div className="flex flex-wrap items-center gap-3 pt-1">
                 <button

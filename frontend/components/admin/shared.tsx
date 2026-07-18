@@ -1,8 +1,8 @@
 import type React from "react";
-import { Boxes, LayoutDashboard, Settings, ShoppingBag, Star, Users, X } from "lucide-react";
+import { Boxes, LayoutDashboard, RefreshCcw, Settings, ShoppingBag, Star, Users, X } from "lucide-react";
 import { STORAGE_KEYS } from "@/lib/storageKeys";
 
-export type AdminTab = "overview" | "products" | "orders" | "customers" | "reviews" | "settings";
+export type AdminTab = "overview" | "products" | "orders" | "returns" | "customers" | "reviews" | "settings";
 export type RevenueMode = "day" | "month";
 
 export type AdminProduct = {
@@ -17,6 +17,7 @@ export type AdminProduct = {
   status?: string | null;
   is_best_seller?: boolean;
   isBestSeller?: boolean;
+  warranty_months?: number;
 };
 
 export type ProductFormState = {
@@ -28,6 +29,7 @@ export type ProductFormState = {
   image: string;
   description: string;
   is_best_seller: boolean;
+  warranty_months: string;
 };
 
 export type ProductPayload = {
@@ -39,6 +41,7 @@ export type ProductPayload = {
   image: string | null;
   description: string | null;
   is_best_seller: boolean;
+  warranty_months: number;
   image_data?: string;
 };
 
@@ -48,6 +51,19 @@ export type AdminOrderItem = {
   product_name: string;
   quantity: number;
   line_total: number;
+  certificate_code?: string | null;
+  warranty_months?: number | null;
+  warranty_starts_at?: string | null;
+  warranty_expires_at?: string | null;
+};
+
+export type ShipmentEvent = {
+  id: number;
+  status: string;
+  title: string;
+  description?: string | null;
+  location?: string | null;
+  event_at: string;
 };
 
 export type AdminOrder = {
@@ -80,6 +96,28 @@ export type AdminOrder = {
   note?: string | null;
   created_at: string;
   items?: AdminOrderItem[];
+  shipping_carrier?: "ghn" | "ghtk" | null;
+  tracking_number?: string | null;
+  tracking_url?: string | null;
+  shipped_at?: string | null;
+  delivered_at?: string | null;
+  shipment_events?: ShipmentEvent[];
+};
+
+export type AdminReturnRequest = {
+  id: number;
+  request_number: string;
+  type: "return" | "exchange" | "warranty";
+  status: "pending" | "approved" | "rejected" | "received" | "refunded" | "completed";
+  reason: string;
+  details?: string | null;
+  images?: string[];
+  image_urls?: string[];
+  admin_note?: string | null;
+  requested_at: string;
+  user?: { id: number; name: string; email: string; phone?: string | null } | null;
+  order?: { id: number; order_number: string; status: string; payment_status?: string } | null;
+  order_item?: AdminOrderItem | null;
 };
 
 export type AdminUser = {
@@ -119,6 +157,7 @@ export type DashboardData = {
   orders: AdminOrder[];
   users: AdminUser[];
   reviews: AdminReview[];
+  returns: AdminReturnRequest[];
   summary: {
     revenue_today: number;
     revenue_total: number;
@@ -128,6 +167,7 @@ export type DashboardData = {
     new_customers: number;
     low_stock: number;
     best_sellers: number;
+    return_requests_pending: number;
   };
 };
 
@@ -144,12 +184,14 @@ export const emptyProductForm: ProductFormState = {
   image: "",
   description: "",
   is_best_seller: false,
+  warranty_months: "12",
 };
 
 export const navItems: { id: AdminTab; label: string; icon: typeof LayoutDashboard }[] = [
   { id: "overview", label: "Tổng quan", icon: LayoutDashboard },
   { id: "products", label: "Sản phẩm", icon: Boxes },
   { id: "orders", label: "Đơn hàng", icon: ShoppingBag },
+  { id: "returns", label: "Hậu mãi", icon: RefreshCcw },
   { id: "customers", label: "Khách hàng", icon: Users },
   { id: "reviews", label: "Đánh giá", icon: Star },
   { id: "settings", label: "Cài đặt", icon: Settings },

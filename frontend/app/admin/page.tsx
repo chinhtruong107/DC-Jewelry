@@ -11,6 +11,7 @@ import ProductsView from "@/components/admin/ProductsView";
 import OrdersView from "@/components/admin/OrdersView";
 import CustomersView from "@/components/admin/CustomersView";
 import ReviewsView from "@/components/admin/ReviewsView";
+import ReturnsView from "@/components/admin/ReturnsView";
 import SettingsView from "@/components/admin/SettingsView";
 import { AdminTab, RevenueMode, AdminProduct, ProductFormState, ProductPayload, AdminOrder, DashboardData, API_URL, TOKEN_KEY, ADMIN_KEY, emptyProductForm, navItems, statusLabels, toDateInputValue, monthLabel, fileToDataUrl, orderProvinceName } from "@/components/admin/shared";
 
@@ -26,6 +27,8 @@ export default function AdminPage() {
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [isLoadingData, setIsLoadingData] = useState(false);
   const [updatingOrderId, setUpdatingOrderId] = useState<number | null>(null);
+  const [creatingShipmentOrderId, setCreatingShipmentOrderId] = useState<number | null>(null);
+  const [updatingReturnId, setUpdatingReturnId] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [revenueMode, setRevenueMode] = useState<RevenueMode>("day");
   const [revenueStartDate, setRevenueStartDate] = useState(() => {
@@ -153,9 +156,9 @@ export default function AdminPage() {
         icon: CircleDollarSign,
       },
       {
-        label: "Đơn cần xử lý",
-        value: String(data.summary.orders_pending),
-        change: `${data.orders.length} đơn trong hệ thống`,
+        label: "Việc cần xử lý",
+        value: String(data.summary.orders_pending + data.summary.return_requests_pending),
+        change: `${data.summary.orders_pending} đơn · ${data.summary.return_requests_pending} hậu mãi`,
         icon: PackageCheck,
       },
       {
@@ -316,6 +319,61 @@ export default function AdminPage() {
     }
   };
 
+  const handleCreateShipment = async (orderId: number, carrier: "ghn" | "ghtk") => {
+    if (!token) return;
+    setCreatingShipmentOrderId(orderId);
+    setDataError("");
+    try {
+      const response = await fetch(`${API_URL}/admin/orders/${orderId}/shipment`, {
+        method: "POST",
+        headers: { Accept: "application/json", "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ carrier }),
+      });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload?.message || "Không thể tạo vận đơn demo.");
+      setData((current) => current ? {
+        ...current,
+        orders: current.orders.map((order) => order.id === orderId ? { ...order, ...payload } : order),
+        summary: {
+          ...current.summary,
+          orders_pending: current.orders.filter((order) => order.id !== orderId && ["pending", "processing"].includes(order.status)).length,
+          orders_shipping: current.orders.filter((order) => order.status === "shipping" || order.id === orderId).length,
+        },
+      } : current);
+    } catch (error) {
+      setDataError(error instanceof Error ? error.message : "Không thể tạo vận đơn demo.");
+    } finally {
+      setCreatingShipmentOrderId(null);
+    }
+  };
+
+  const handleUpdateReturn = async (returnId: number, status: string, adminNote: string) => {
+    if (!token) return;
+    setUpdatingReturnId(returnId);
+    setDataError("");
+    try {
+      const response = await fetch(`${API_URL}/admin/return-requests/${returnId}`, {
+        method: "PATCH",
+        headers: { Accept: "application/json", "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ status, admin_note: adminNote.trim() || null }),
+      });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload?.message || "Không thể cập nhật yêu cầu hậu mãi.");
+      setData((current) => current ? {
+        ...current,
+        returns: current.returns.map((item) => item.id === returnId ? payload : item),
+        summary: {
+          ...current.summary,
+          return_requests_pending: current.returns.filter((item) => item.id !== returnId && item.status === "pending").length + (payload.status === "pending" ? 1 : 0),
+        },
+      } : current);
+    } catch (error) {
+      setDataError(error instanceof Error ? error.message : "Không thể cập nhật yêu cầu hậu mãi.");
+    } finally {
+      setUpdatingReturnId(null);
+    }
+  };
+
   const openCreateProduct = () => {
     const nextId = data?.products.length ? Math.max(...data.products.map((product) => product.id)) + 1 : 1;
     setEditingProductId(null);
@@ -340,6 +398,7 @@ export default function AdminPage() {
       image: product.raw_image || product.image || "",
       description: product.description || "",
       is_best_seller: Boolean(product.is_best_seller ?? product.isBestSeller),
+      warranty_months: String(product.warranty_months ?? 12),
     });
     setSelectedProductImageFile(null);
     setProductError("");
@@ -365,6 +424,7 @@ export default function AdminPage() {
       image: productForm.image.trim() || null,
       description: productForm.description.trim() || null,
       is_best_seller: productForm.is_best_seller,
+      warranty_months: Number(productForm.warranty_months),
     };
 
     if (selectedProductImageFile) {
@@ -403,7 +463,7 @@ export default function AdminPage() {
 
     try {
       const payload = await productPayload();
-      if (!payload.name || !payload.category || Number.isNaN(payload.price) || Number.isNaN(payload.stock)) {
+      if (!payload.name || !payload.category || Number.isNaN(payload.price) || Number.isNaN(payload.stock) || payload.warranty_months < 1 || payload.warranty_months > 120) {
         setProductError("Vui lòng nhập đầy đủ tên, danh mục, giá và tồn kho.");
         return;
       }
@@ -771,7 +831,17 @@ export default function AdminPage() {
                 orders={filteredOrders}
                 provinces={provinces}
                 updatingOrderId={updatingOrderId}
+                creatingShipmentOrderId={creatingShipmentOrderId}
                 onUpdateOrderStatus={handleUpdateOrderStatus}
+                onCreateShipment={handleCreateShipment}
+              />
+            )}
+
+            {data && activeTab === "returns" && (
+              <ReturnsView
+                requests={data.returns || []}
+                updatingReturnId={updatingReturnId}
+                onUpdateReturn={handleUpdateReturn}
               />
             )}
 

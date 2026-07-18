@@ -10,18 +10,23 @@ export default function OrdersView({
   orders,
   provinces,
   updatingOrderId,
+  creatingShipmentOrderId,
   onUpdateOrderStatus,
+  onCreateShipment,
 }: {
   orders: AdminOrder[];
   provinces: ProvinceOption[];
   updatingOrderId: number | null;
+  creatingShipmentOrderId: number | null;
   onUpdateOrderStatus: (orderId: number, status: AdminOrder["status"]) => void;
+  onCreateShipment: (orderId: number, carrier: "ghn" | "ghtk") => void;
 }) {
   const [orderStatusFilter, setOrderStatusFilter] = useState<AdminOrder["status"] | "all">("all");
   const [orderQuery, setOrderQuery] = useState("");
   const [orderStartDate, setOrderStartDate] = useState("");
   const [orderEndDate, setOrderEndDate] = useState("");
   const [orderProvinceCode, setOrderProvinceCode] = useState("all");
+  const [carriers, setCarriers] = useState<Record<number, "ghn" | "ghtk">>({});
   const statusFilters: { id: AdminOrder["status"] | "all"; label: string }[] = [
     { id: "all", label: "Tất cả" },
     { id: "pending", label: "Cần xác nhận" },
@@ -262,9 +267,7 @@ export default function OrdersView({
           const nextAction =
             order.status === "pending"
               ? { label: "Xác nhận đơn", loading: "Đang xác nhận...", status: "processing" }
-              : order.status === "processing"
-                ? { label: "Chuyển sang đang giao", loading: "Đang cập nhật...", status: "shipping" }
-                : order.status === "shipping"
+              : order.status === "shipping"
                   ? { label: "Đánh dấu đã giao", loading: "Đang hoàn tất...", status: "completed" }
                   : null;
 
@@ -287,6 +290,12 @@ export default function OrdersView({
                 <p className="mt-3 line-clamp-2 text-sm text-slate-600 dark:text-slate-400">
                   {order.items?.map((item) => `${item.product_name} x${item.quantity}`).join(", ") || "Chưa có sản phẩm"}
                 </p>
+                {order.tracking_number && (
+                  <div className="mt-3 rounded-md border border-sky-100 bg-sky-50 px-3 py-2 text-xs text-sky-700 dark:border-sky-500/20 dark:bg-sky-500/10 dark:text-sky-200">
+                    <p className="font-semibold">{order.shipping_carrier?.toUpperCase()} demo · {order.tracking_number}</p>
+                    <a href={`/tracking/${encodeURIComponent(order.tracking_number)}`} target="_blank" rel="noreferrer" className="mt-1 inline-block underline underline-offset-2">Mở trang theo dõi</a>
+                  </div>
+                )}
               </div>
               <div className="shrink-0 sm:text-right">
                 <p className="text-lg font-semibold text-slate-950 dark:text-white">{formatVND(order.total)}</p>
@@ -297,7 +306,22 @@ export default function OrdersView({
               <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
                 Thanh toán: {order.payment_method?.toUpperCase()} - {order.payment_status}
               </span>
-              {nextAction ? (
+              {order.status === "processing" && !order.tracking_number ? (
+                <div className="flex flex-wrap gap-2">
+                  <select
+                    value={carriers[order.id] || "ghn"}
+                    onChange={(event) => setCarriers((current) => ({ ...current, [order.id]: event.target.value as "ghn" | "ghtk" }))}
+                    className="h-9 rounded-md border border-sky-200 bg-white px-2 text-xs font-semibold text-sky-700 outline-none dark:border-sky-500/30 dark:bg-slate-950 dark:text-sky-200"
+                    aria-label={`Đơn vị vận chuyển cho ${order.order_number}`}
+                  >
+                    <option value="ghn">GHN demo</option>
+                    <option value="ghtk">GHTK demo</option>
+                  </select>
+                  <button type="button" onClick={() => onCreateShipment(order.id, carriers[order.id] || "ghn")} disabled={creatingShipmentOrderId === order.id} className="h-9 rounded-md bg-sky-600 px-3 text-xs font-semibold text-white transition hover:bg-sky-700 disabled:opacity-50">
+                    {creatingShipmentOrderId === order.id ? "Đang tạo vận đơn..." : "Tạo vận đơn & giao hàng"}
+                  </button>
+                </div>
+              ) : nextAction ? (
                 <div className="flex flex-wrap gap-2">
                   <button
                     type="button"

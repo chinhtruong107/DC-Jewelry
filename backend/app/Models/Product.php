@@ -17,6 +17,7 @@ class Product extends Model
         'category',
         'is_best_seller',
         'stock',
+        'warranty_months',
         'status',
     ];
 
@@ -24,6 +25,7 @@ class Product extends Model
         'price' => 'integer',
         'is_best_seller' => 'boolean',
         'stock' => 'integer',
+        'warranty_months' => 'integer',
     ];
 
     protected $appends = ['isBestSeller'];

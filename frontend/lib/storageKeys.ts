@@ -4,6 +4,7 @@ export const STORAGE_KEYS = {
   adminUser: "ducchinh_admin_user",
   adminToken: "ducchinh_admin_token",
   cart: "ducchinh_cart",
+  guestCartToken: "ducchinh_guest_cart_token",
   guestFavorites: "ducchinh_favorites_guest",
   firstVisitPromoSeen: "ducchinh_first_visit_promo_seen",
   pendingVnpayOrder: "ducchinh_pending_vnpay_order",

@@ -130,6 +130,7 @@ class ProductController extends Controller
             'category' => [$required, 'string', 'max:255'],
             'is_best_seller' => ['sometimes', 'boolean'],
             'stock' => ['sometimes', 'integer', 'min:0'],
+            'warranty_months' => ['sometimes', 'integer', 'min:1', 'max:120'],
             'status' => ['sometimes', 'string', 'in:active,inactive'],
         ]);
     }

@@ -10,8 +10,31 @@ import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 
 export default function Cart() {
-  const { cart } = useCart();
+  const { cart, isCartReady, cartError, refreshCart } = useCart();
   const itemCount = cart.reduce((sum, item) => sum + item.quantity, 0);
+
+  if (!isCartReady) {
+    return (
+      <main className="grid min-h-screen place-items-center bg-[#070607] px-5 text-center text-[#f7efe1]">
+        <div>
+          <div className="mx-auto h-9 w-9 animate-spin rounded-full border-2 border-[#d6bd7a]/30 border-t-[#d6bd7a]" />
+          <p className="mt-4 text-sm text-[#cfc4ad]/75">Đang đồng bộ giỏ hàng...</p>
+        </div>
+      </main>
+    );
+  }
+
+  if (cart.length === 0 && cartError) {
+    return (
+      <main className="grid min-h-screen place-items-center bg-[#070607] px-5 text-center text-[#f7efe1]">
+        <div className="max-w-lg border border-rose-400/30 bg-rose-950/30 p-6">
+          <h1 className="font-serif text-3xl">Chưa tải được giỏ hàng</h1>
+          <p className="mt-3 text-sm leading-6 text-rose-100/80">{cartError}</p>
+          <button type="button" onClick={() => refreshCart().catch(() => undefined)} className="mt-5 h-11 border border-[#d6bd7a] px-5 text-xs font-bold uppercase tracking-[0.16em] text-[#d6bd7a] hover:bg-[#d6bd7a] hover:text-black">Thử lại</button>
+        </div>
+      </main>
+    );
+  }
 
   if (cart.length === 0) return <EmptyCart />;
 
@@ -30,6 +53,11 @@ export default function Cart() {
         </div>
 
         <div className="grid gap-8 lg:grid-cols-[1fr_420px]">
+          {cartError && (
+            <p className="border border-rose-400/30 bg-rose-950/30 px-4 py-3 text-sm text-rose-100 lg:col-span-2" role="alert">
+              {cartError}
+            </p>
+          )}
           <div className="space-y-6"><CartItemList /></div>
           <OrderSummary />
         </div>

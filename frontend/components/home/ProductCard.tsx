@@ -17,6 +17,7 @@ export default function ProductCard({ product }: { product: Product }) {
   const [imageError, setImageError] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
   const [justAdded, setJustAdded] = useState(false);
+  const [cartError, setCartError] = useState("");
   const imageUrl = productImageUrl(product.image);
   const category = fixVietnameseText(product.category);
   const stock = product.stock ?? 100;
@@ -27,11 +28,17 @@ export default function ProductCard({ product }: { product: Product }) {
     event.stopPropagation();
     if (isOutOfStock) return;
     setIsAdding(true);
-    await new Promise((resolve) => setTimeout(resolve, 300));
-    addToCart({ id: product.id, name: product.name, price: product.price, image: imageUrl, quantity: 1, stock });
-    setIsAdding(false);
-    setJustAdded(true);
-    setTimeout(() => setJustAdded(false), 1800);
+    setCartError("");
+    try {
+      await addToCart({ id: product.id, name: product.name, price: product.price, image: imageUrl, quantity: 1, stock });
+      setJustAdded(true);
+      setTimeout(() => setJustAdded(false), 1800);
+    } catch (error) {
+      setCartError(error instanceof Error ? error.message : "Không thể thêm vào giỏ hàng.");
+      setTimeout(() => setCartError(""), 3000);
+    } finally {
+      setIsAdding(false);
+    }
   };
 
   const handleToggleLike = (event: React.MouseEvent) => {
@@ -63,6 +70,7 @@ export default function ProductCard({ product }: { product: Product }) {
       </div>
 
       <div className="pt-5">
+        {cartError && <p className="mb-2 text-xs font-medium text-rose-700" role="alert">{cartError}</p>}
         <div className="flex items-center justify-between gap-3 text-[9px] font-semibold uppercase tracking-[0.2em] text-[#8a777a]">
           <span>{category || "Fine jewelry"}</span><span>{stock <= 10 && !isOutOfStock ? "Limited" : ""}</span>
         </div>

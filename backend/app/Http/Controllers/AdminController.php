@@ -5,10 +5,14 @@ namespace App\Http\Controllers;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\ProductReview;
+use App\Models\ReturnRequest;
 use App\Models\User;
+use App\Services\DemoShippingService;
+use App\Services\ResendEmailService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 
 class AdminController extends Controller
@@ -63,10 +67,13 @@ class AdminController extends Controller
                     'raw_image' => $product->getRawImagePath(),
                 ]);
             });
-        $orders = Order::with('items')->latest()->get();
+        $orders = Order::with(['items', 'shipmentEvents'])->latest()->get();
         $users = User::where('role', 'customer')->latest()->get();
         $reviews = ProductReview::with(['user:id,name,email', 'product:id,name,image', 'order:id,order_number'])
             ->latest()
+            ->get();
+        $returns = ReturnRequest::with(['user:id,name,email,phone', 'order:id,order_number,status,payment_status', 'orderItem'])
+            ->latest('requested_at')
             ->get();
         $today = Carbon::today();
 
@@ -75,6 +82,7 @@ class AdminController extends Controller
             'orders' => $orders,
             'users' => $users,
             'reviews' => $reviews,
+            'returns' => $returns,
             'summary' => [
                 'revenue_today' => Order::whereDate('created_at', $today)->sum('total'),
                 'revenue_total' => Order::where('status', '!=', 'cancelled')->sum('total'),
@@ -84,11 +92,17 @@ class AdminController extends Controller
                 'new_customers' => User::where('role', 'customer')->whereDate('created_at', $today)->count(),
                 'low_stock' => Product::where('stock', '<=', 10)->count(),
                 'best_sellers' => Product::where('is_best_seller', true)->count(),
+                'return_requests_pending' => ReturnRequest::where('status', 'pending')->count(),
             ],
         ]);
     }
 
-    public function updateOrderStatus(Request $request, Order $order)
+    public function updateOrderStatus(
+        Request $request,
+        Order $order,
+        DemoShippingService $shipping,
+        ResendEmailService $email
+    )
     {
         $validated = $request->validate([
             'status' => ['required', 'string', 'in:pending,processing,shipping,completed,cancelled'],
@@ -102,7 +116,10 @@ class AdminController extends Controller
                 ]);
             }
 
-            return response()->json($order->cancelAndRestoreStock()->load('items'));
+            $order = $shipping->syncOrderStatus($order->cancelAndRestoreStock(), 'cancelled');
+            $this->sendOrderEmail($email, $order);
+
+            return response()->json($order->load(['items', 'shipmentEvents']));
         }
 
         if ($order->status === 'cancelled') {
@@ -111,8 +128,34 @@ class AdminController extends Controller
             ]);
         }
 
-        $order->update($validated);
+        $allowedTransitions = [
+            'pending' => ['processing'],
+            'processing' => [],
+            'shipping' => ['completed'],
+            'completed' => [],
+        ];
+        if (! in_array($validated['status'], $allowedTransitions[$order->status] ?? [], true)) {
+            throw ValidationException::withMessages([
+                'status' => ['Không thể chuyển đơn hàng sang trạng thái đã chọn.'],
+            ]);
+        }
 
-        return response()->json($order->load('items'));
+        $order->update($validated);
+        $order = $shipping->syncOrderStatus($order, $validated['status']);
+        $this->sendOrderEmail($email, $order);
+
+        return response()->json($order->load(['items', 'shipmentEvents']));
+    }
+
+    private function sendOrderEmail(ResendEmailService $email, Order $order): void
+    {
+        try {
+            $email->sendOrderStatusNotification($order);
+        } catch (\Throwable $exception) {
+            Log::warning('Admin order status email could not be sent.', [
+                'order_id' => $order->id,
+                'message' => $exception->getMessage(),
+            ]);
+        }
     }
 }

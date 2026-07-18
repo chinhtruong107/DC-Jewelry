@@ -5,8 +5,11 @@ namespace App\Http\Controllers;
 use App\Models\Order;
 use App\Models\Product;
 use App\Services\VnpayService;
+use App\Services\DemoShippingService;
+use App\Services\ResendEmailService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Laravel\Sanctum\PersonalAccessToken;
@@ -15,7 +18,7 @@ class OrderController extends Controller
 {
     public function index(Request $request)
     {
-        $orders = Order::with(['items.review'])
+        $orders = Order::with(['items.review', 'shipmentEvents'])
             ->when($request->user(), function ($query, $user) {
                 $query->where('user_id', $user->id);
             })
@@ -25,7 +28,7 @@ class OrderController extends Controller
         return response()->json($orders);
     }
 
-    public function store(Request $request, VnpayService $vnpay)
+    public function store(Request $request, VnpayService $vnpay, ResendEmailService $email)
     {
         $user = $this->resolveUser($request);
 
@@ -46,7 +49,7 @@ class OrderController extends Controller
             'items' => ['required', 'array', 'min:1'],
             'items.*.id' => ['required', 'integer', 'exists:products,id'],
             'items.*.quantity' => ['required', 'integer', 'min:1'],
-            'payment_method' => ['nullable', 'string', 'in:cod,momo,vnpay'],
+            'payment_method' => ['nullable', 'string', 'in:cod,vnpay'],
             'note' => ['nullable', 'string'],
         ]);
 
@@ -71,6 +74,8 @@ class OrderController extends Controller
                 $lineTotal = $product->price * $quantity;
                 $subtotal += $lineTotal;
                 $product->decrement('stock', $quantity);
+                $warrantyStartsAt = now();
+                $warrantyMonths = max(1, (int) ($product->warranty_months ?? 12));
 
                 return [
                     'product_id' => $product->id,
@@ -79,6 +84,10 @@ class OrderController extends Controller
                     'price' => $product->price,
                     'quantity' => $quantity,
                     'line_total' => $lineTotal,
+                    'certificate_code' => 'DCJ-'.Str::upper(Str::random(12)),
+                    'warranty_months' => $warrantyMonths,
+                    'warranty_starts_at' => $warrantyStartsAt,
+                    'warranty_expires_at' => $warrantyStartsAt->copy()->addMonths($warrantyMonths),
                 ];
             });
 
@@ -142,6 +151,9 @@ class OrderController extends Controller
             return $order->load('items');
         });
 
+        CartController::clearForRequest($request, $user);
+        $this->sendOrderEmail($email, $order);
+
         if ($order->payment_method === 'vnpay') {
             return response()->json([
                 ...$order->toArray(),
@@ -160,10 +172,10 @@ class OrderController extends Controller
             abort(403);
         }
 
-        return response()->json($order->load('items'));
+        return response()->json($order->load(['items', 'shipmentEvents']));
     }
 
-    public function updateStatus(Request $request, Order $order)
+    public function updateStatus(Request $request, Order $order, DemoShippingService $shipping, ResendEmailService $email)
     {
         if (! $request->user() || $order->user_id !== $request->user()->id) {
             abort(403);
@@ -179,10 +191,13 @@ class OrderController extends Controller
             ]);
         }
 
-        return response()->json($order->cancelAndRestoreStock());
+        $order = $shipping->syncOrderStatus($order->cancelAndRestoreStock(), 'cancelled');
+        $this->sendOrderEmail($email, $order);
+
+        return response()->json($order->load(['items.review', 'shipmentEvents']));
     }
 
-    public function cancel(Request $request, Order $order)
+    public function cancel(Request $request, Order $order, DemoShippingService $shipping, ResendEmailService $email)
     {
         if (! $request->user() || $order->user_id !== $request->user()->id) {
             abort(403);
@@ -194,7 +209,10 @@ class OrderController extends Controller
             ]);
         }
 
-        return response()->json($order->cancelAndRestoreStock());
+        $order = $shipping->syncOrderStatus($order->cancelAndRestoreStock(), 'cancelled');
+        $this->sendOrderEmail($email, $order);
+
+        return response()->json($order->load(['items.review', 'shipmentEvents']));
     }
 
     private function resolveUser(Request $request)
@@ -238,5 +256,17 @@ class OrderController extends Controller
         $parts = array_filter([$detail, $wardName, $provinceName]);
 
         return $parts === [] ? null : implode(', ', $parts);
+    }
+
+    private function sendOrderEmail(ResendEmailService $email, Order $order): void
+    {
+        try {
+            $email->sendOrderStatusNotification($order);
+        } catch (\Throwable $exception) {
+            Log::warning('Order email could not be sent.', [
+                'order_id' => $order->id,
+                'message' => $exception->getMessage(),
+            ]);
+        }
     }
 }

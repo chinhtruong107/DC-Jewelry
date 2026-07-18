@@ -37,6 +37,11 @@ class Order extends Model
         'status',
         'payment_method',
         'payment_status',
+        'shipping_carrier',
+        'tracking_number',
+        'tracking_url',
+        'shipped_at',
+        'delivered_at',
         'vnpay_transaction_no',
         'vnpay_bank_code',
         'vnpay_response_code',
@@ -57,6 +62,8 @@ class Order extends Model
         'discount' => 'integer',
         'total' => 'integer',
         'vnpay_paid_at' => 'datetime',
+        'shipped_at' => 'datetime',
+        'delivered_at' => 'datetime',
     ];
 
     public function user()
@@ -72,6 +79,16 @@ class Order extends Model
     public function reviews()
     {
         return $this->hasMany(ProductReview::class);
+    }
+
+    public function shipmentEvents()
+    {
+        return $this->hasMany(ShipmentEvent::class)->orderBy('event_at');
+    }
+
+    public function returnRequests()
+    {
+        return $this->hasMany(ReturnRequest::class);
     }
 
     public function canBeCancelledByCustomer(): bool

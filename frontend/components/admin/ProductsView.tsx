@@ -308,6 +308,18 @@ export default function ProductsView({
                 </label>
 
                 <label className="text-sm font-medium text-slate-700 dark:text-slate-200">
+                  Bảo hành (tháng)
+                  <input
+                    type="number"
+                    min={1}
+                    max={120}
+                    value={productForm.warranty_months}
+                    onChange={(event) => setProductForm((current) => ({ ...current, warranty_months: event.target.value }))}
+                    className="mt-1.5 h-10 w-full rounded-md border border-orange-100 bg-white px-3 text-sm outline-none transition focus:border-orange-400 focus:ring-2 focus:ring-orange-100 dark:border-slate-700 dark:bg-slate-950"
+                  />
+                </label>
+
+                <label className="text-sm font-medium text-slate-700 dark:text-slate-200">
                   Danh mục
                   <select
                     value={productForm.category}
@@ -456,6 +468,9 @@ export default function ProductsView({
                     )}
                     <span className="rounded-md bg-emerald-50 px-2 py-1 font-semibold text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-200">
                       Đã bán {sold}
+                    </span>
+                    <span className="rounded-md bg-sky-50 px-2 py-1 font-semibold text-sky-700 dark:bg-sky-500/10 dark:text-sky-200">
+                      BH {product.warranty_months ?? 12} tháng
                     </span>
                     <span className="rounded-md bg-slate-100 px-2 py-1 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
                       {formatVND(revenue)}

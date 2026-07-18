@@ -9,4 +9,6 @@ export interface Product {
   is_best_seller?: boolean;
   stock?: number;
   status?: string;
+  warranty_months?: number;
+  recommendation_reason?: string;
 }

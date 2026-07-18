@@ -9,6 +9,10 @@ frontend/test-results/
 frontend/playwright-report/
 frontend/tsconfig.tsbuildinfo
 
+# Development runtime logs
+frontend/*.log
+backend/storage/logs/*.log
+
 # Laravel runtime and PHPUnit artifacts
 backend/.phpunit.result.cache
 backend/storage/framework/cache/data/

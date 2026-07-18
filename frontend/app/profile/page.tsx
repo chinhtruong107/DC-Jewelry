@@ -1,6 +1,7 @@
 "use client";
 
 import ProductCard from "@/components/home/ProductCard";
+import AfterSalesPanel from "@/components/profile/AfterSalesPanel";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -22,6 +23,7 @@ import {
   ChevronDown,
   ChevronUp,
   Clock,
+  FileCheck2,
   Heart,
   MapPin,
   Package,
@@ -29,6 +31,7 @@ import {
   Save,
   ShoppingBag,
   Star,
+  Truck,
   UserCircle,
   X,
   XCircle,
@@ -47,6 +50,9 @@ interface OrderItem {
   price: number;
   quantity: number;
   review?: ApiReview | null;
+  certificateCode?: string | null;
+  warrantyMonths?: number | null;
+  warrantyExpiresAt?: string | null;
 }
 
 interface Order {
@@ -62,6 +68,10 @@ interface Order {
   tax: number;
   discount: number;
   items: OrderItem[];
+  trackingNumber?: string | null;
+  shippingCarrier?: string | null;
+  deliveredAt?: string | null;
+  updatedAt?: string | null;
 }
 
 interface ApiOrderItem {
@@ -72,6 +82,9 @@ interface ApiOrderItem {
   price: number;
   quantity: number;
   review?: ApiReview | null;
+  certificate_code?: string | null;
+  warranty_months?: number | null;
+  warranty_expires_at?: string | null;
 }
 
 interface ApiOrder {
@@ -87,6 +100,10 @@ interface ApiOrder {
   tax: number;
   discount: number;
   items: ApiOrderItem[];
+  tracking_number?: string | null;
+  shipping_carrier?: string | null;
+  delivered_at?: string | null;
+  updated_at?: string | null;
 }
 
 interface ApiReview {
@@ -125,7 +142,6 @@ function mapOrderStatus(status: string): Exclude<OrderStatus, "Tất cả"> {
 
 function mapPaymentMethod(paymentMethod: string) {
   if (paymentMethod === "cod") return "Thanh toán khi nhận hàng";
-  if (paymentMethod === "momo") return "Ví MoMo";
   if (paymentMethod === "vnpay") return "VNPay";
 
   return paymentMethod;
@@ -152,6 +168,10 @@ function mapApiOrder(order: ApiOrder): Order {
     shipping: order.shipping_fee,
     tax: order.tax,
     discount: order.discount,
+    trackingNumber: order.tracking_number,
+    shippingCarrier: order.shipping_carrier,
+    deliveredAt: order.delivered_at,
+    updatedAt: order.updated_at,
     items: order.items.map((item) => ({
       id: item.product_id ?? item.id,
       orderItemId: item.id,
@@ -160,6 +180,9 @@ function mapApiOrder(order: ApiOrder): Order {
       price: item.price,
       quantity: item.quantity,
       review: item.review || null,
+      certificateCode: item.certificate_code,
+      warrantyMonths: item.warranty_months,
+      warrantyExpiresAt: item.warranty_expires_at,
     })),
   };
 }
@@ -729,6 +752,14 @@ export default function ProfilePage() {
                                   {isCancelling ? "Đang hủy..." : "Hủy đơn"}
                                 </button>
                               )}
+                              {order.trackingNumber && (
+                                <Link
+                                  href={`/tracking/${encodeURIComponent(order.trackingNumber)}`}
+                                  className="inline-flex h-9 items-center gap-2 border border-sky-400/30 px-3 text-sm font-semibold text-sky-100 transition hover:bg-sky-950/30"
+                                >
+                                  <Truck className="h-4 w-4" /> Theo dõi vận đơn
+                                </Link>
+                              )}
                             </div>
                           </div>
 
@@ -760,6 +791,14 @@ export default function ProfilePage() {
                                       <Link href={`/product/${item.id}`} className="mt-1 inline-block text-sm font-semibold text-[#d6bd7a] hover:text-[#f4df9b]">
                                         Xem sản phẩm
                                       </Link>
+                                      {item.certificateCode && (
+                                        <Link
+                                          href={`/certificate/${encodeURIComponent(item.certificateCode)}`}
+                                          className="ml-0 mt-2 inline-flex h-9 items-center gap-2 border border-emerald-400/25 px-3 text-sm font-semibold text-emerald-100 transition hover:bg-emerald-950/30 sm:ml-3 sm:mt-0"
+                                        >
+                                          <FileCheck2 className="h-4 w-4" /> Chứng nhận {item.warrantyMonths || 12} tháng
+                                        </Link>
+                                      )}
                                       {order.rawStatus === "completed" && (
                                         <button
                                           type="button"
@@ -815,6 +854,8 @@ export default function ProfilePage() {
                     })}
                   </div>
                 )}
+
+                <AfterSalesPanel token={token} orders={orders} />
               </div>
             )}
 

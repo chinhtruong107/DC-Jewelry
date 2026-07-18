@@ -21,7 +21,6 @@ import {
   Check,
   CreditCard,
   Landmark,
-  QrCode,
   ShoppingBag,
   Wallet,
   X,
@@ -32,7 +31,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
-type PaymentMethod = "cod" | "momo" | "vnpay";
+type PaymentMethod = "cod" | "vnpay";
 
 type CheckoutAddressBlockProps = {
   address: string;
@@ -61,12 +60,6 @@ const paymentOptions: {
     title: "Thanh toán khi nhận hàng",
     description: "Thanh toán bằng tiền mặt khi đơn hàng được giao tới bạn.",
     icon: Wallet,
-  },
-  {
-    id: "momo",
-    title: "Ví MoMo",
-    description: "Tạo đơn hàng với phương thức MoMo. Bản demo chưa kết nối cổng thanh toán thật.",
-    icon: QrCode,
   },
   {
     id: "vnpay",
@@ -143,7 +136,7 @@ function CheckoutAddressBlock({
 }
 
 export default function CheckoutPage() {
-  const { cart, clearCart } = useCart();
+  const { cart, clearCart, guestToken } = useCart();
   const { user, token } = useAuth();
   const router = useRouter();
 
@@ -297,6 +290,7 @@ export default function CheckoutPage() {
         headers: {
           "Content-Type": "application/json",
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          ...(guestToken ? { "X-Cart-Token": guestToken } : {}),
         },
         body: JSON.stringify({
           customer: {
@@ -377,11 +371,6 @@ export default function CheckoutPage() {
               Mã đơn hàng: {orderNumber}
             </p>
           )}
-          {paymentMethod === "momo" && (
-            <p className="mt-4 border border-[#28171a]/12 bg-[#fffdf9] px-4 py-3 text-sm text-[#756568]">
-              Phương thức đã chọn: MoMo. Đây là luồng demo, đơn hàng đã được lưu để xử lý thanh toán.
-            </p>
-          )}
           <Link
             href="/"
             className="mt-8 inline-flex h-12 items-center justify-center border border-[#7a2130] bg-[#7a2130] px-6 text-[10px] font-bold uppercase tracking-[0.22em] text-[#fffaf2] transition hover:bg-[#55131e]"
@@ -415,7 +404,7 @@ export default function CheckoutPage() {
                     Chưa chọn phương thức thanh toán
                   </h2>
                   <p className="mt-2 text-sm leading-7 text-[#756568]">
-                    Vui lòng chọn COD, MoMo hoặc VNPay trong phần tóm tắt đơn hàng trước khi xác nhận.
+                    Vui lòng chọn COD hoặc VNPay trong phần tóm tắt đơn hàng trước khi xác nhận.
                   </p>
                 </div>
               </div>

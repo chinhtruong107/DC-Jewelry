@@ -10,7 +10,7 @@ Infrastructure is maintained in [DCJewelry-Terraform](https://github.com/chinhtr
 Push DCJewelry to main
   -> Backend CI + Frontend CI
   -> SSH to Ansible Control Node
-  -> /home/ubuntu/ansible-jewelry/scripts/deploy.sh
+  -> /home/ubuntu/dc-jewelry-ansible/scripts/deploy.sh
   -> Ansible deploys the app to production EC2
 ```
 

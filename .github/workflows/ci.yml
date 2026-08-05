@@ -119,7 +119,7 @@ jobs:
             -o IdentitiesOnly=yes \
             -o StrictHostKeyChecking=yes \
             "$CONTROL_NODE_USER@$CONTROL_NODE_HOST" \
-            'cd /home/ubuntu/ansible-jewelry && ./scripts/deploy.sh'
+            'cd /home/ubuntu/dc-jewelry-ansible && ./scripts/deploy.sh'
 
   notify-deploy:
     name: Notify Deploy Result

@@ -1,144 +1,105 @@
-# Đức Chính Jewelry
+# DCJewelry
 
-Website thương mại điện tử trang sức cao cấp gồm Laravel REST API, Next.js storefront/admin và Docker Compose. Dự án hỗ trợ danh mục sản phẩm, tìm kiếm, giỏ hàng, yêu thích, tài khoản, đánh giá, checkout COD/VNPay, quản trị đơn hàng và chatbot tư vấn.
+Full-stack jewelry e-commerce application built with Laravel, Next.js, MySQL, Docker Compose, GitHub Actions, Ansible, and AWS EC2.
 
-## Công nghệ
+## Architecture
 
-- Frontend: Next.js 16, React 19, TypeScript, Tailwind CSS, Radix UI, Framer Motion
-- Backend: Laravel 10, PHP 8.2, Sanctum, MySQL
-- Tích hợp: VNPay sandbox, Resend, Gemini
-- Vận hành: Docker Compose, GitHub Actions, Ansible
+Infrastructure is maintained in [DCJewelry-Terraform](https://github.com/chinhtruong107/DCJewelry-Terraform). Server configuration and deployment are maintained in [DCJewelry-Ansible](https://github.com/chinhtruong107/DCJewelry-Ansible).
 
-## Cổng mặc định
+```text
+Push DCJewelry to main
+  -> Backend CI + Frontend CI
+  -> SSH to Ansible Control Node
+  -> /home/ubuntu/ansible-jewelry/scripts/deploy.sh
+  -> Ansible deploys the app to production EC2
+```
 
-| Thành phần | Địa chỉ |
+Deployment runs only after backend and frontend CI succeed on a push to `main`. Pull requests run validation only.
+
+The Control Node must be able to pull this public repository. The production checkout is expected at `/home/ubuntu/jewelry` and uses the `main` branch.
+
+## Features
+
+- Customer storefront and admin area
+- Product catalog, search, cart, favorites, accounts, and reviews
+- COD/VNPay checkout and order management
+- Contact and newsletter subscriptions
+- Resend and Gemini integrations
+
+## Local URLs
+
+| Component | URL |
 | --- | --- |
-| Storefront và admin | http://localhost:3002 |
+| Storefront and admin | http://localhost:3002 |
 | Laravel API | http://localhost:8002/api |
-| Trang admin | http://localhost:3002/admin |
+| Admin area | http://localhost:3002/admin |
 
-## Chạy bằng Docker
+## Run with Docker
 
 ```powershell
-cd D:\trangsuc
+Copy-Item backend/.env.example backend/.env
 docker compose up -d --build
 docker compose logs -f backend frontend
 ```
 
-Backend tự chạy migration và seed dữ liệu địa giới hành chính khi container khởi động. Chỉ đặt `RUN_SEEDERS=true` khi cần nạp lại toàn bộ dữ liệu demo.
-
-## Chạy thủ công
-
-Mở hai terminal riêng.
+Configure database and integration values in `backend/.env`. Startup migrations and demo seeders are opt-in:
 
 ```powershell
-cd D:\trangsuc\backend
+$env:RUN_STARTUP_MIGRATIONS="true"
+$env:RUN_SEEDERS="true"
+docker compose up -d --build
+```
+
+Do not enable demo seeders against production data.
+
+## Run without Docker
+
+```powershell
+cd backend
 composer install
+Copy-Item .env.example .env
 php artisan key:generate
 php artisan migrate
 php artisan serve --host=0.0.0.0 --port=8002
 ```
 
+In a second terminal:
+
 ```powershell
-cd D:\trangsuc\frontend
+cd frontend
 npm install
 npm run dev
 ```
 
-## Cấu hình môi trường
+The frontend uses the same-origin `/api` proxy. Set `NEXT_PUBLIC_API_URL=/api` and configure `LARAVEL_API_URL` for Laravel.
 
-Sao chép `backend/.env.example` thành `backend/.env`, sau đó cấu hình tối thiểu:
-
-```env
-APP_NAME="Duc Chinh Jewelry"
-APP_URL=http://localhost:8002
-FRONTEND_URL=http://localhost:3002
-
-DB_CONNECTION=mysql
-DB_HOST=your-database-host
-DB_PORT=3306
-DB_DATABASE=jewelry
-DB_USERNAME=your-database-user
-DB_PASSWORD=your-database-password
-
-RESEND_API_KEY=
-RESEND_FROM_ADDRESS="Duc Chinh Jewelry <onboarding@resend.dev>"
-CONTACT_NOTIFICATION_EMAIL=hello@ducchinhjewelry.vn
-ADMIN_NOTIFICATION_EMAIL=ct8395459@gmail.com
-LOW_STOCK_THRESHOLD=10
-
-VNPAY_TMN_CODE=
-VNPAY_HASH_SECRET=
-VNPAY_RETURN_URL=http://localhost:8002/api/payments/vnpay/return
-```
-
-Frontend dùng API cùng origin `/api`; route handler Next.js gọi Laravel qua:
-
-```env
-NEXT_PUBLIC_API_URL=/api
-LARAVEL_API_URL=http://127.0.0.1:8002/api
-```
-
-## Contact và newsletter
-
-- `POST /api/contact-messages`: lưu yêu cầu vào `contact_messages` và gửi thông báo Resend khi có `CONTACT_NOTIFICATION_EMAIL`.
-- `POST /api/newsletter-subscriptions`: lưu đăng ký nhận tin theo email, không tạo bản ghi trùng.
-- Dữ liệu vẫn được lưu nếu Resend tạm thời không gửi được.
-
-Sau khi cập nhật code, chạy migration:
+## Quality checks
 
 ```powershell
-cd D:\trangsuc\backend
-php artisan migrate
-```
-
-## Kiểm tra chất lượng
-
-```powershell
-cd D:\trangsuc\frontend
-npm run lint
-npm run typecheck
-npm run build
-npm run test:e2e
-```
-
-```powershell
-cd D:\trangsuc\backend
+cd backend
 php artisan test
 php vendor/bin/pint --test
+cd ../frontend
+npm run lint
+npm run build
 ```
 
-## Tài khoản quản trị
+These checks run in `.github/workflows/ci.yml`.
 
-Tạo quản trị viên qua biến môi trường `ADMIN_NAME`, `ADMIN_EMAIL`, `ADMIN_PASSWORD`, rồi chạy:
+## GitHub Actions secrets
 
-```powershell
-php artisan db:seed --class=AdminUserSeeder
-```
+Add these secrets before pushing to `main`:
 
-Không dùng mật khẩu mẫu trên môi trường thật.
+| Secret | Description |
+| --- | --- |
+| `CONTROL_NODE_HOST` | Elastic IP or hostname of the Control Node |
+| `CONTROL_NODE_USER` | SSH user, normally `ubuntu` |
+| `CONTROL_NODE_SSH_KEY` | Private SSH key for the Control Node |
+| `TELEGRAM_BOT_TOKEN` | Optional CI notification bot token |
+| `TELEGRAM_CHAT_ID` | Optional CI notification chat ID |
 
-## API chính
+Never commit SSH keys, database credentials, API keys, environment files, or Terraform state. Rotate any credential previously exposed in Git history.
 
-| Method | Endpoint | Chức năng |
-| --- | --- | --- |
-| POST | `/api/register` | Đăng ký |
-| POST | `/api/login` | Đăng nhập |
-| POST | `/api/forgot-password` | Khôi phục mật khẩu |
-| GET | `/api/products` | Danh sách sản phẩm |
-| GET | `/api/products/{id}` | Chi tiết sản phẩm |
-| POST | `/api/orders` | Tạo đơn hàng |
-| GET | `/api/orders` | Đơn hàng của tài khoản |
-| PATCH | `/api/orders/{id}/cancel` | Hủy đơn hợp lệ |
-| GET/POST/DELETE | `/api/favorites` | Quản lý yêu thích |
-| POST | `/api/reviews` | Đánh giá sản phẩm đã mua |
-| POST | `/api/contact-messages` | Gửi yêu cầu liên hệ |
-| POST | `/api/newsletter-subscriptions` | Đăng ký nhận tin |
-| GET | `/api/admin/dashboard` | Dữ liệu dashboard quản trị |
+## License
 
-## Lưu ý bảo mật
-
-- Không commit `.env`, log, session, cache, `.next` hoặc `tsconfig.tsbuildinfo`.
-- Dùng secrets của hệ thống deploy cho database, Resend, Gemini và VNPay.
-- Tắt `APP_DEBUG` và dùng `APP_ENV=production` khi triển khai thật.
-- Xoay khóa ngay nếu khóa từng xuất hiện trong lịch sử Git.
+This project is intended for portfolio and demonstration use. Add a project-specific license before allowing redistribution.

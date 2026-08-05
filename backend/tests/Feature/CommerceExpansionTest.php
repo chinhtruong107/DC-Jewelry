@@ -42,7 +42,7 @@ class CommerceExpansionTest extends TestCase
     {
         Config::set('services.resend.key', 're_test_key');
         Config::set('services.resend.from', 'Duc Chinh Jewelry <hello@example.com>');
-        Config::set('services.resend.admin_to', 'ct8395459@gmail.com');
+        Config::set('services.resend.admin_to', 'admin@ducchinhjewelry.vn');
         Http::fake(['api.resend.com/emails' => Http::response(['id' => 'email_123'], 200)]);
 
         $customer = User::factory()->create(['role' => 'customer', 'must_change_password' => false]);
@@ -85,7 +85,7 @@ class CommerceExpansionTest extends TestCase
         Http::assertSent(function ($request) use ($returnRequest) {
             $payload = $request->data();
 
-            return $payload['to'] === ['ct8395459@gmail.com']
+            return $payload['to'] === ['admin@ducchinhjewelry.vn']
                 && str_contains($payload['subject'], $returnRequest->json('request_number'))
                 && str_contains($payload['subject'], 'Yêu cầu Trả hàng mới');
         });
@@ -95,7 +95,7 @@ class CommerceExpansionTest extends TestCase
     {
         Config::set('services.resend.key', 're_test_key');
         Config::set('services.resend.from', 'Duc Chinh Jewelry <hello@example.com>');
-        Config::set('services.resend.admin_to', 'ct8395459@gmail.com');
+        Config::set('services.resend.admin_to', 'admin@ducchinhjewelry.vn');
         Config::set('services.resend.low_stock_threshold', 10);
         Http::fake(['api.resend.com/emails' => Http::response(['id' => 'email_123'], 200)]);
 
@@ -112,14 +112,14 @@ class CommerceExpansionTest extends TestCase
         Http::assertSent(function ($request) use ($orderNumber) {
             $payload = $request->data();
 
-            return $payload['to'] === ['ct8395459@gmail.com']
+            return $payload['to'] === ['admin@ducchinhjewelry.vn']
                 && str_contains($payload['subject'], $orderNumber)
                 && str_contains($payload['subject'], 'Đơn hàng mới');
         });
         Http::assertSent(function ($request) use ($product) {
             $payload = $request->data();
 
-            return $payload['to'] === ['ct8395459@gmail.com']
+            return $payload['to'] === ['admin@ducchinhjewelry.vn']
                 && str_contains($payload['subject'], 'Cảnh báo tồn kho')
                 && str_contains($payload['text'], $product->name)
                 && str_contains($payload['text'], 'còn 10');

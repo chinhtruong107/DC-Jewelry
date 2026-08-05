@@ -15,7 +15,7 @@ services:
       RESEND_API_KEY: "${RESEND_API_KEY:-}"
       RESEND_FROM_ADDRESS: "${RESEND_FROM_ADDRESS:-Duc Chinh Jewelry <onboarding@resend.dev>}"
       CONTACT_NOTIFICATION_EMAIL: "${CONTACT_NOTIFICATION_EMAIL:-hello@ducchinhjewelry.vn}"
-      ADMIN_NOTIFICATION_EMAIL: "${ADMIN_NOTIFICATION_EMAIL:-ct8395459@gmail.com}"
+      ADMIN_NOTIFICATION_EMAIL: "${ADMIN_NOTIFICATION_EMAIL:-admin@ducchinhjewelry.vn}"
       LOW_STOCK_THRESHOLD: "${LOW_STOCK_THRESHOLD:-10}"
       FRONTEND_URL: "${FRONTEND_URL:-http://localhost:3002}"
       VNPAY_PAYMENT_URL: "${VNPAY_PAYMENT_URL:-https://sandbox.vnpayment.vn/paymentv2/vpcpay.html}"

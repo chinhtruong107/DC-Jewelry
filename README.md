@@ -2,9 +2,16 @@
 
 Full-stack jewelry e-commerce application built with Laravel, Next.js, MySQL, Docker Compose, GitHub Actions, Ansible, and AWS EC2.
 
+## Related infrastructure repositories
+
+This application is deployed with two companion repositories:
+
+- [DC-Jewelry-Ansible](https://github.com/chinhtruong107/DC-Jewelry-Ansible) — server configuration and application deployment.
+- [DC-Jewelry-Terraform](https://github.com/chinhtruong107/DC-Jewelry-Terraform) — AWS infrastructure provisioning.
+
 ## Architecture
 
-Infrastructure is maintained in [DCJewelry-Terraform](https://github.com/chinhtruong107/DCJewelry-Terraform). Server configuration and deployment are maintained in [DCJewelry-Ansible](https://github.com/chinhtruong107/DCJewelry-Ansible).
+Infrastructure provisioning is maintained in [DC-Jewelry-Terraform](https://github.com/chinhtruong107/DC-Jewelry-Terraform). Server configuration and deployment are maintained in [DC-Jewelry-Ansible](https://github.com/chinhtruong107/DC-Jewelry-Ansible).
 
 ```text
 Push DCJewelry to main

@@ -92,10 +92,45 @@ jobs:
             --data-urlencode "chat_id=${TELEGRAM_CHAT_ID}" \
             --data-urlencode "text=${MESSAGE}"
 
-  deploy:
-    name: Deploy via Ansible Control Node
+  build-images:
+    name: Build and Publish Images
     runs-on: ubuntu-latest
-    needs: [backend, frontend]
+    needs: [backend, frontend, notify-ci]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    outputs:
+      image_tag: ${{ steps.release.outputs.image_tag }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Define immutable image tag
+        id: release
+        run: echo "image_tag=sha-${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        env:
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+        with:
+          username: ${{ env.DOCKERHUB_USERNAME }}
+          password: ${{ env.DOCKERHUB_TOKEN }}
+      - name: Build and push Laravel image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./backend
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/dc-jewelry-backend:${{ steps.release.outputs.image_tag }}
+      - name: Build and push Next.js image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./frontend
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/dc-jewelry-frontend:${{ steps.release.outputs.image_tag }}
+
+  deploy-k3s:
+    name: Deploy Release to K3s
+    runs-on: ubuntu-latest
+    needs: build-images
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
 
     steps:
@@ -108,23 +143,25 @@ jobs:
           printf '%s\n' "$CONTROL_NODE_SSH_KEY" > ~/.ssh/control-node-key
           chmod 600 ~/.ssh/control-node-key
           ssh-keyscan -H "$CONTROL_NODE_HOST" >> ~/.ssh/known_hosts
-
-      - name: Run deployment on Control Node
+      - name: Run the Platform release script on the Control Node
         env:
           CONTROL_NODE_HOST: ${{ secrets.CONTROL_NODE_HOST }}
           CONTROL_NODE_USER: ${{ secrets.CONTROL_NODE_USER }}
+          IMAGE_TAG: ${{ needs.build-images.outputs.image_tag }}
+          K3S_OVERLAY: ${{ vars.K3S_OVERLAY || 'aws-domain' }}
+          K3S_PLATFORM_DIR: ${{ vars.K3S_PLATFORM_DIR || '/home/ubuntu/dc-jewelry-k3s-platform' }}
         run: |
           ssh \
             -i ~/.ssh/control-node-key \
             -o IdentitiesOnly=yes \
             -o StrictHostKeyChecking=yes \
             "$CONTROL_NODE_USER@$CONTROL_NODE_HOST" \
-            'cd /home/ubuntu/dc-jewelry-ansible && ./scripts/deploy.sh'
+            "cd '$K3S_PLATFORM_DIR' && BACKEND_IMAGE_TAG='$IMAGE_TAG' FRONTEND_IMAGE_TAG='$IMAGE_TAG' ./scripts/deploy.sh '$K3S_OVERLAY'"
 
   notify-deploy:
     name: Notify Deploy Result
     runs-on: ubuntu-latest
-    needs: [backend, frontend, deploy]
+    needs: [backend, frontend, build-images, deploy-k3s]
     if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
     continue-on-error: true
 
@@ -133,7 +170,7 @@ jobs:
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-          DEPLOY_RESULT: ${{ needs.deploy.result }}
+          DEPLOY_RESULT: ${{ needs.deploy-k3s.result }}
           REPOSITORY: ${{ github.repository }}
           BRANCH: ${{ github.ref_name }}
           COMMIT_SHA: ${{ github.sha }}

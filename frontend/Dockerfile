@@ -27,13 +27,10 @@ ENV NEXT_TELEMETRY_DISABLED=1
 ENV PORT=3002
 ENV HOSTNAME=0.0.0.0
 
-COPY --from=builder /app/package*.json ./
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/.next ./.next
-
-# Chỉ giữ dòng này nếu dự án có thư mục public
 COPY --from=builder /app/public ./public
+COPY --from=builder /app/.next/standalone ./
+COPY --from=builder /app/.next/static ./.next/static
 
 EXPOSE 3002
 
-CMD ["npm", "run", "start", "--", "-p", "3002"]
+CMD ["node", "server.js"]

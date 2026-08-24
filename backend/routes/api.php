@@ -7,7 +7,6 @@ use App\Http\Controllers\CartController;
 use App\Http\Controllers\CertificateController;
 use App\Http\Controllers\CouponController;
 use App\Http\Controllers\CustomerEngagementController;
-use App\Http\Controllers\DonHangController;
 use App\Http\Controllers\FavoriteController;
 use App\Http\Controllers\LocationController;
 use App\Http\Controllers\OrderController;
@@ -81,7 +80,6 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
     Route::post('admin/coupons', [AdminCouponController::class, 'store']);
     Route::put('admin/coupons/{coupon}', [AdminCouponController::class, 'update']);
     Route::delete('admin/coupons/{coupon}', [AdminCouponController::class, 'destroy']);
-    Route::apiResource('don_hangs', DonHangController::class);
 });
 
 /*

@@ -35,10 +35,6 @@ class AdminController extends Controller
             })
             ->first();
 
-        if (! $admin && strtolower($login) === 'admin') {
-            $admin = User::where('role', 'admin')->oldest('id')->first();
-        }
-
         if (! $admin || ! Hash::check($validated['password'], $admin->password)) {
             throw ValidationException::withMessages([
                 'username' => ['Tài khoản hoặc mật khẩu không đúng.'],

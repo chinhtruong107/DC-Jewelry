@@ -60,8 +60,28 @@ class AuthenticationAndAuthorizationTest extends TestCase
             ->assertJsonStructure(['products', 'orders', 'users', 'reviews', 'summary']);
     }
 
-    public function test_legacy_order_resource_is_not_public(): void
+    public function test_guest_order_cannot_be_viewed_by_arbitrary_user(): void
     {
-        $this->getJson('/api/don_hangs')->assertUnauthorized();
+        $user = User::factory()->create(['role' => 'customer']);
+        $order = \App\Models\Order::create([
+            'order_number' => 'DH2608240001ABC',
+            'user_id' => null,
+            'customer_name' => 'Khách Vãng Lai',
+            'customer_email' => 'guest@example.com',
+            'customer_phone' => '0987654321',
+            'customer_address' => 'Hà Nội',
+            'payment_method' => 'cod',
+            'subtotal' => 100000,
+            'shipping_fee' => 30000,
+            'tax' => 8000,
+            'discount' => 0,
+            'total' => 138000,
+        ]);
+
+        Sanctum::actingAs($user);
+        $this->getJson("/api/orders/{$order->id}")->assertForbidden();
+
+        // Khách cung cấp đúng email thì được xem
+        $this->getJson("/api/orders/{$order->id}?email=guest@example.com")->assertOk();
     }
 }

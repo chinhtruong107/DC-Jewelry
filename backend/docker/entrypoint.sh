@@ -10,7 +10,10 @@ mkdir -p \
     storage/framework/sessions \
     storage/framework/testing \
     storage/framework/views \
-    storage/logs
+    storage/logs \
+    bootstrap/cache
+
+chmod -R 775 storage bootstrap/cache 2>/dev/null || true
 
 if ! grep -q '^APP_KEY=base64:' .env 2>/dev/null && [ -z "$APP_KEY" ]; then
     php artisan key:generate --force

@@ -17,9 +17,6 @@ type ChatProduct = {
   status?: string;
 };
 
-const OPENAI_API_URL = "https://api.openai.com/v1/responses";
-const DEFAULT_MODEL = "gpt-5.4-mini";
-
 function trimText(value: unknown, maxLength: number) {
   return typeof value === "string" ? value.trim().slice(0, maxLength) : "";
 }
@@ -42,39 +39,13 @@ function formatProduct(product: ChatProduct) {
     .join(" | ");
 }
 
-function extractOutputText(data: unknown) {
-  if (typeof data !== "object" || data === null) return "";
-
-  const outputText = (data as { output_text?: unknown }).output_text;
-  if (typeof outputText === "string" && outputText.trim()) {
-    return outputText.trim();
-  }
-
-  const output = (data as { output?: unknown }).output;
-  if (!Array.isArray(output)) return "";
-
-  return output
-    .flatMap((item) => {
-      if (typeof item !== "object" || item === null) return [];
-      const content = (item as { content?: unknown }).content;
-      return Array.isArray(content) ? content : [];
-    })
-    .map((contentItem) => {
-      if (typeof contentItem !== "object" || contentItem === null) return "";
-      const text = (contentItem as { text?: unknown }).text;
-      return typeof text === "string" ? text : "";
-    })
-    .filter(Boolean)
-    .join("\n")
-    .trim();
-}
-
 export async function POST(request: Request) {
-  const apiKey = process.env.OPENAI_API_KEY;
+  const geminiApiKey = process.env.GEMINI_API_KEY;
+  const openaiApiKey = process.env.OPENAI_API_KEY;
 
-  if (!apiKey) {
+  if (!geminiApiKey && !openaiApiKey) {
     return NextResponse.json(
-      { message: "Chưa cấu hình OPENAI_API_KEY." },
+      { message: "Chưa cấu hình GEMINI_API_KEY hoặc OPENAI_API_KEY." },
       { status: 503 }
     );
   }
@@ -99,7 +70,7 @@ export async function POST(request: Request) {
       ? body.history
           .slice(-8)
           .map((item) => ({
-            role: item.role === "assistant" ? "assistant" : "user",
+            role: item.role === "assistant" ? ("assistant" as const) : ("user" as const),
             content: trimText(item.content, 500),
           }))
           .filter((item) => item.content)
@@ -138,55 +109,64 @@ ${historyContext}
 
 Khách vừa hỏi: ${message}`;
 
-    const openaiResponse = await fetch(OPENAI_API_URL, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: process.env.OPENAI_MODEL || DEFAULT_MODEL,
-        input: [
-          {
-            role: "user",
-            content: [
-              {
-                type: "input_text",
-                text: prompt,
-              },
-            ],
-          },
-        ],
-        max_output_tokens: 450,
-      }),
-    });
+    let replyText = "";
 
-    const data = await openaiResponse.json();
+    if (geminiApiKey) {
+      const geminiModel = process.env.GEMINI_MODEL || "gemini-1.5-flash";
+      const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent?key=${geminiApiKey}`;
 
-    if (!openaiResponse.ok) {
-      console.error("OpenAI chat error:", data);
-      const error =
-        typeof data === "object" && data !== null && "error" in data
-          ? (data as { error?: { code?: string; type?: string; message?: string } }).error
-          : undefined;
+      const geminiResponse = await fetch(geminiUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: { maxOutputTokens: 450 },
+        }),
+      });
 
-      return NextResponse.json(
-        {
-          code: error?.code || error?.type || "openai_error",
-          message:
-            error?.code === "insufficient_quota"
-              ? "OpenAI API key hiện hết quota hoặc chưa bật billing."
-              : "AI hiện chưa phản hồi được. Vui lòng thử lại sau.",
-        },
-        { status: openaiResponse.status }
-      );
+      if (geminiResponse.ok) {
+        const geminiData = await geminiResponse.json();
+        replyText = geminiData.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || "";
+      } else {
+        console.error("Gemini chat error:", await geminiResponse.text());
+      }
     }
 
-    const text = extractOutputText(data);
+    if (!replyText && openaiApiKey) {
+      const openaiModel = process.env.OPENAI_MODEL || "gpt-4o-mini";
+      const openaiResponse = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${openaiApiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: openaiModel,
+          messages: [
+            {
+              role: "system",
+              content: "Bạn là Đức Chính Jewelry Concierge, chatbot tư vấn cho website trang sức cao cấp Đức Chính Jewelry.",
+            },
+            {
+              role: "user",
+              content: prompt,
+            },
+          ],
+          max_tokens: 450,
+        }),
+      });
+
+      if (openaiResponse.ok) {
+        const openaiData = await openaiResponse.json();
+        replyText = openaiData.choices?.[0]?.message?.content?.trim() || "";
+      } else {
+        console.error("OpenAI chat error:", await openaiResponse.text());
+      }
+    }
 
     return NextResponse.json({
       text:
-        text ||
+        replyText ||
         "Mình chưa tạo được câu trả lời phù hợp. Bạn cho mình biết nhu cầu, nhóm sản phẩm và ngân sách để tư vấn chính xác hơn nhé.",
     });
   } catch (error) {

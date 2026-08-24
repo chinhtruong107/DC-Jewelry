@@ -227,8 +227,24 @@ class OrderController extends Controller
     {
         $user = $this->resolveUser($request);
 
-        if ($user && $order->user_id && $order->user_id !== $user->id) {
-            abort(403);
+        if ($user && $user->role === 'admin') {
+            return response()->json($order->load(['items', 'shipmentEvents']));
+        }
+
+        if ($order->user_id !== null) {
+            if (! $user || $order->user_id !== $user->id) {
+                abort(403);
+            }
+        } else {
+            $providedEmail = $request->query('email') ?? $request->header('X-Customer-Email') ?? $user?->email;
+            $providedPhone = $request->query('phone') ?? $request->header('X-Customer-Phone') ?? $user?->phone;
+
+            $emailMatches = $providedEmail && strtolower(trim((string) $providedEmail)) === strtolower(trim((string) $order->customer_email));
+            $phoneMatches = $providedPhone && trim((string) $providedPhone) === trim((string) $order->customer_phone);
+
+            if (! $emailMatches && ! $phoneMatches) {
+                abort(403);
+            }
         }
 
         return response()->json($order->load(['items', 'shipmentEvents']));

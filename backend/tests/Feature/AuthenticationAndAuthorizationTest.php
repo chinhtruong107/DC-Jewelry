@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Order;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
@@ -63,7 +64,7 @@ class AuthenticationAndAuthorizationTest extends TestCase
     public function test_guest_order_cannot_be_viewed_by_arbitrary_user(): void
     {
         $user = User::factory()->create(['role' => 'customer']);
-        $order = \App\Models\Order::create([
+        $order = Order::create([
             'order_number' => 'DH2608240001ABC',
             'user_id' => null,
             'customer_name' => 'Khách Vãng Lai',

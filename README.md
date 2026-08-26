@@ -1,5 +1,4 @@
 # DCJewelry
-
 DCJewelry is a full-stack jewellery e-commerce platform. It provides a customer storefront and an administration area, with a Laravel REST API, a Next.js frontend, and a MySQL-compatible database.
 
 The project is organised as an application repository with dedicated infrastructure, automation, and Kubernetes-platform repositories. This separation keeps application code, cloud provisioning, configuration management, and cluster deployment configuration independently maintainable.

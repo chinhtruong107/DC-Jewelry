@@ -73,7 +73,7 @@ export default function Footer() {
         </div>
 
         <div className="mt-16 flex flex-col gap-5 border-t border-white/15 pt-6 text-[9px] font-semibold uppercase tracking-[0.2em] text-white/48 sm:flex-row sm:items-center sm:justify-between">
-          <span>© 2026 Đức Chính Jewelry</span><span className="inline-flex items-center gap-2"><Instagram className="h-3.5 w-3.5" /> Instagram</span><span>Hà Nội · Việt Nam</span>
+          <span>© 2026 Đức Chính Jewelry · v1.1</span><span className="inline-flex items-center gap-2"><Instagram className="h-3.5 w-3.5" /> Instagram</span><span>Hà Nội · Việt Nam</span>
         </div>
       </div>
     </footer>

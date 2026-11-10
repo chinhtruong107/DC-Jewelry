@@ -9,7 +9,7 @@ The project is organised as an application repository with dedicated infrastruct
 - **Backend:** Laravel 10, PHP 8.2, Laravel Sanctum
 - **Database:** MySQL-compatible database
 - **Local runtime:** Docker Compose
-- **CI/CD:** GitHub Actions
+- **CI/CD:** GitHub Actions (build, test, deploy to K3s)
 - **Infrastructure & operations:** Terraform, Ansible, AWS EC2
 - **Kubernetes platform:** K3s, Kustomize, Traefik
 
@@ -18,8 +18,8 @@ The project is organised as an application repository with dedicated infrastruct
 - Customer storefront with product catalogue, search, cart, favourites, accounts, and reviews
 - Admin area for managing the e-commerce workflow
 - Checkout and order management with COD and VNPay
-- Contact form and newsletter subscriptions
 - Resend email and Gemini integrations
+- Telegram notifications for CI and deployment results
 
 ## Repository map
 
